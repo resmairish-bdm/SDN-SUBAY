@@ -1,0 +1,2351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+<title>SDN BDM Suite — CAMP · AVRA · HOPE</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+/* ─── RESET & ROOT ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:       #0b0f1a;
+  --surf:     #111827;
+  --surf2:    #1a2235;
+  --surf3:    #1e2d44;
+  --border:   #243044;
+  --accent:   #2dd4bf;
+  --blue:     #38bdf8;
+  --pink:     #f472b6;
+  --warn:     #fbbf24;
+  --danger:   #f87171;
+  --ok:       #4ade80;
+  --purple:   #c084fc;
+  --tx:       #e2e8f0;
+  --tx2:      #94a3b8;
+  --tx3:      #64748b;
+  --r:        10px;
+}
+
+/* ─── BASE ─────────────────────────────────────────────────── */
+html {
+  font-size: 14px;
+  scroll-behavior: smooth;
+}
+body {
+  background: var(--bg);
+  color: var(--tx);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  /* CRITICAL: allow full page scroll */
+  overflow-x: auto;
+  overflow-y: auto;
+  min-width: 320px;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(45,212,191,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(45,212,191,.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* ─── SCROLLBARS ────────────────────────────────────────────── */
+::-webkit-scrollbar              { width: 8px; height: 8px; }
+::-webkit-scrollbar-track        { background: var(--surf); }
+::-webkit-scrollbar-thumb        { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover  { background: var(--tx3); }
+::-webkit-scrollbar-corner       { background: var(--surf); }
+
+/* ─── HEADER ────────────────────────────────────────────────── */
+header {
+  position: sticky; top: 0; z-index: 200;
+  background: rgba(11,15,26,.95);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+.logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.logo-icon {
+  width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--accent), var(--blue));
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800;
+  color: var(--bg); box-shadow: 0 0 14px rgba(45,212,191,.35);
+}
+.logo-words { line-height: 1.2; }
+.logo-name { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; }
+.logo-full { font-size: 10px; color: var(--tx3); letter-spacing: .07em; text-transform: uppercase; }
+.hdr-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.btn-hdr {
+  display: inline-flex; align-items: center; gap: 5px;
+  border: none; border-radius: 7px; padding: 7px 13px;
+  font-size: 12px; font-weight: 600; font-family: 'DM Sans', sans-serif;
+  cursor: pointer; text-decoration: none; white-space: nowrap;
+  transition: opacity .2s, transform .15s;
+}
+.btn-hdr:hover { opacity: .82; transform: translateY(-1px); }
+.btn-admin  { background: var(--surf2); border: 1px solid var(--border); color: var(--tx2); }
+.btn-report { background: linear-gradient(135deg, var(--pink), #e879f9); color: #fff; }
+.data-chip {
+  display: none; align-items: center; gap: 5px;
+  background: rgba(45,212,191,.1); border: 1px solid rgba(45,212,191,.25);
+  color: var(--accent); padding: 4px 10px; border-radius: 100px;
+  font-size: 11px; font-weight: 600; white-space: nowrap;
+}
+
+/* ─── PAGE WRAPPER ──────────────────────────────────────────── */
+.page {
+  position: relative; z-index: 1;
+  width: 100%;
+  padding: 0 20px 60px;
+}
+
+/* ─── HERO / SEARCH ─────────────────────────────────────────── */
+.hero {
+  text-align: center;
+  padding: 40px 0 32px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+.hero-tag {
+  display: inline-block;
+  background: rgba(45,212,191,.1); border: 1px solid rgba(45,212,191,.25);
+  color: var(--accent); font-size: 10px; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase;
+  padding: 4px 12px; border-radius: 100px; margin-bottom: 16px;
+}
+.hero h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(22px, 3.5vw, 42px);
+  font-weight: 800; line-height: 1.1;
+  background: linear-gradient(135deg, #e2e8f0, var(--accent) 55%, var(--blue));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; margin-bottom: 10px;
+}
+.hero p { color: var(--tx2); font-size: 14px; line-height: 1.6; margin-bottom: 28px; }
+
+/* SEARCH BAR */
+.search-box { display: flex; gap: 8px; }
+#searchInput {
+  flex: 1; min-width: 0;
+  background: var(--surf2); border: 1.5px solid var(--border);
+  border-radius: var(--r); padding: 12px 16px;
+  color: var(--tx); font-family: 'DM Sans', sans-serif; font-size: 14px;
+  outline: none; transition: border-color .2s, box-shadow .2s;
+}
+#searchInput:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(45,212,191,.12);
+}
+#searchInput::placeholder { color: var(--tx3); }
+.btn-search {
+  background: linear-gradient(135deg, var(--accent), var(--blue));
+  color: var(--bg); border: none; border-radius: var(--r);
+  padding: 12px 22px; font-size: 13px; font-weight: 700;
+  font-family: 'Syne', sans-serif; cursor: pointer;
+  transition: opacity .2s, transform .15s; white-space: nowrap; flex-shrink: 0;
+}
+.btn-search:hover { opacity: .88; transform: translateY(-1px); }
+.search-hint { font-size: 11px; color: var(--tx3); text-align: center; margin-top: 8px; }
+kbd { background: var(--surf2); border: 1px solid var(--border); padding: 1px 5px; border-radius: 4px; }
+.status-bar {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 12px; color: var(--tx3);
+  justify-content: center; margin-top: 8px;
+}
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--tx3); flex-shrink: 0; }
+.dot.ok      { background: var(--ok);     box-shadow: 0 0 6px var(--ok); }
+.dot.err     { background: var(--danger); }
+.dot.loading { background: var(--accent); animation: blink 1s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+/* ─── RESULTS WRAPPER ───────────────────────────────────────── */
+#results { display: none; margin-top: 32px; animation: fadeUp .35s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+/* ─── TWO-COLUMN LAYOUT ─────────────────────────────────────── */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 16px;
+  align-items: start;
+  /* Allow layout to shrink below min at smaller screens */
+  min-width: 0;
+}
+/* Stack at narrow widths */
+@media (max-width: 960px) {
+  .layout { grid-template-columns: 1fr; }
+}
+
+/* ─── CARDS ──────────────────────────────────────────────────── */
+.card {
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  /* Prevent card from overflowing its column */
+  min-width: 0;
+}
+.card-head {
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px;
+}
+.card-title {
+  font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--tx3);
+}
+.card-body { padding: 16px 18px; }
+
+/* ─── HH INFO ────────────────────────────────────────────────── */
+.hh-name { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; margin-bottom: 3px; word-break: break-word; color: var(--tx); }
+.hh-id   { font-size: 11px; color: var(--accent); letter-spacing: .06em; margin-bottom: 14px; }
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ii label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--tx3); margin-bottom: 2px; }
+.ii span  { font-size: 13px; font-weight: 500; color: var(--tx); word-break: break-word; }
+.sbadge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.sb-ok  { background: rgba(74,222,128,.12); color: var(--ok);  border: 1px solid rgba(74,222,128,.2); }
+.sb-no  { background: rgba(148,163,184,.1); color: var(--tx2); border: 1px solid var(--border); }
+
+/* ─── DIVIDER ────────────────────────────────────────────────── */
+.divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 20px 0 14px;
+}
+.divider span {
+  font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--tx2); white-space: nowrap;
+}
+.divider::before, .divider::after { content:''; flex:1; height:1px; background: var(--border); }
+
+/* ─── FAMILY TABLE ───────────────────────────────────────────── */
+/* CRITICAL: table must scroll horizontally, never clip */
+.tbl-outer {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+}
+.tbl-outer table {
+  border-collapse: collapse;
+  font-size: 12px;
+  /* table itself gets min-width so columns don't squish */
+  min-width: 900px;
+  width: 100%;
+}
+.tbl-outer thead th {
+  background: var(--surf2);
+  padding: 9px 12px;
+  text-align: left;
+  font-size: 10px; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--tx3); font-weight: 600; white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 2;
+}
+.tbl-outer tbody tr { border-bottom: 1px solid rgba(36,48,68,.5); transition: background .15s; }
+.tbl-outer tbody tr:hover { background: rgba(45,212,191,.03); }
+.tbl-outer tbody tr:last-child { border-bottom: none; }
+.tbl-outer td {
+  padding: 9px 12px; color: var(--tx2);
+  vertical-align: middle; white-space: nowrap;
+}
+td.nm { color: var(--tx); font-weight: 500; }
+td.center { text-align: center; }
+
+/* member status */
+.mb { display: inline-block; padding: 2px 8px; border-radius: 100px; font-size: 11px; font-weight: 600; }
+.mb-a { background: rgba(74,222,128,.1);  color: var(--ok);     }
+.mb-d { background: rgba(248,113,113,.1); color: var(--danger); }
+.mb-o { background: rgba(148,163,184,.07);color: var(--tx3);    }
+
+/* grantee mark */
+.gmark {
+  display: inline-block; background: rgba(45,212,191,.14); color: var(--accent);
+  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  padding: 2px 5px; border-radius: 4px; margin-left: 5px; vertical-align: middle;
+  border: 1px solid rgba(45,212,191,.25);
+}
+/* sex */
+.sm { color: var(--blue); } .sf { color: var(--pink); }
+
+/* badges */
+.pwd-b  { display: inline-block; padding: 2px 7px; border-radius: 100px; font-size: 10px; font-weight: 700; background: rgba(192,132,252,.12); color: var(--purple); border: 1px solid rgba(192,132,252,.2); }
+.preg-b { display: inline-block; padding: 2px 7px; border-radius: 100px; font-size: 10px; font-weight: 700; background: rgba(244,114,182,.12); color: var(--pink);   border: 1px solid rgba(244,114,182,.2); }
+.none-tx { color: var(--tx3); }
+
+/* ─── INCONSISTENCY WARN ICON ────────────────────────────────── */
+.wcell { position: relative; display: inline-flex; align-items: center; gap: 5px; }
+.wico {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 17px; height: 17px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(251,191,36,.15); color: var(--warn);
+  font-size: 10px; font-weight: 800; cursor: help;
+  border: 1px solid rgba(251,191,36,.35);
+}
+.wico:hover .tip { display: block; }
+.tip {
+  display: none; position: fixed; z-index: 9999;
+  background: #1e293b; border: 1px solid var(--warn); color: var(--warn);
+  font-size: 11px; line-height: 1.5; padding: 7px 10px;
+  border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,.55);
+  pointer-events: none; width: 240px; white-space: normal; text-align: left;
+  /* positioned via JS below */
+  top: 0; left: 0; transform: none;
+}
+
+/* ─── ANALYSIS PANEL ─────────────────────────────────────────── */
+.panel { display: flex; flex-direction: column; gap: 14px; }
+.stat-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.st .slbl   { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--tx3); margin-bottom: 3px; }
+.st .sval   { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; line-height: 1; }
+
+.issues     { display: flex; flex-direction: column; gap: 9px; }
+.iitem      {
+  background: var(--surf2); border: 1px solid rgba(251,191,36,.18);
+  border-left: 3px solid var(--warn); border-radius: 8px;
+  padding: 9px 12px; font-size: 12px; color: var(--tx2); line-height: 1.5;
+}
+.iitem b    { color: var(--warn); display: block; margin-bottom: 2px; font-size: 11px; }
+.no-issues  {
+  background: rgba(74,222,128,.05); border: 1px solid rgba(74,222,128,.2);
+  border-radius: 8px; padding: 14px; text-align: center;
+  font-size: 13px; color: var(--ok);
+}
+
+/* ─── EMPTY STATE ────────────────────────────────────────────── */
+#emptyState { display: none; text-align: center; padding: 60px 20px; color: var(--tx3); }
+#emptyState h3 { font-family: 'Syne', sans-serif; font-size: 18px; color: var(--tx2); margin-bottom: 8px; }
+#emptyState p  { font-size: 13px; }
+
+/* ─── MODALS ─────────────────────────────────────────────────── */
+.overlay {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,.78); backdrop-filter: blur(6px);
+  display: none; align-items: center; justify-content: center;
+  padding: 20px; overflow-y: auto;
+}
+.overlay.open { display: flex; }
+.modal {
+  background: var(--surf); border: 1px solid var(--border);
+  border-radius: 18px; padding: 28px; width: 100%;
+  box-shadow: 0 8px 40px rgba(0,0,0,.5);
+  animation: fadeUp .25s ease;
+  position: relative;
+}
+.modal h2    { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; margin-bottom: 6px; }
+.modal .msub { font-size: 13px; color: var(--tx2); margin-bottom: 20px; line-height: 1.6; }
+.modal label { font-size: 12px; color: var(--tx2); font-weight: 500; display: block; margin-bottom: 5px; }
+.modal input[type=text],
+.modal input[type=password] {
+  width: 100%; background: var(--surf2); border: 1.5px solid var(--border);
+  border-radius: 8px; padding: 11px 14px; color: var(--tx);
+  font-family: 'DM Sans', sans-serif; font-size: 13px;
+  outline: none; margin-bottom: 14px; transition: border-color .2s;
+}
+.modal input:focus { border-color: var(--accent); }
+.mactions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+.btn-sec { background: var(--surf2); border: 1px solid var(--border); color: var(--tx2); border-radius: 8px; padding: 9px 16px; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background .2s; }
+.btn-sec:hover { background: var(--surf3); }
+.btn-pri { background: linear-gradient(135deg, var(--accent), var(--blue)); color: var(--bg); border: none; border-radius: 8px; padding: 9px 20px; font-size: 13px; font-weight: 700; font-family: 'Syne', sans-serif; cursor: pointer; transition: opacity .2s; }
+.btn-pri:hover { opacity: .88; }
+.btn-pri:disabled { opacity: .4; pointer-events: none; }
+.err-msg  { font-size: 12px; color: var(--danger); margin-top: -10px; margin-bottom: 12px; display: none; }
+.info-box { background: rgba(45,212,191,.06); border: 1px solid rgba(45,212,191,.15); border-radius: 8px; padding: 11px 13px; margin-bottom: 14px; font-size: 12px; color: var(--tx2); line-height: 1.6; }
+.info-box b { color: var(--accent); }
+
+/* Upload zone */
+.uzone {
+  border: 2px dashed var(--border); border-radius: 10px;
+  padding: 24px 16px; text-align: center; cursor: pointer;
+  transition: border-color .2s; margin-bottom: 14px;
+}
+.uzone:hover, .uzone.over { border-color: var(--accent); background: rgba(45,212,191,.03); }
+.uzone svg { display: block; margin: 0 auto 10px; color: var(--tx3); }
+.uzone p   { font-size: 13px; color: var(--tx2); }
+.uzone small { font-size: 11px; color: var(--tx3); }
+#fileStatus { font-size: 12px; color: var(--accent); margin-bottom: 12px; display: none; }
+#curData    { display: none; margin-bottom: 14px; }
+
+/* AVRA SCOPED THEME */
+.avra-scope {
+  --navy:#1a2d4f;--gold:#c8973a;--light-gold:#f5e9d0;--cream:#fdfcf8;
+  --border:#d4c9b0;--text:#2c2c2a;--muted:#6b6860;--surface:#f0ece4;
+  --white:#ffffff;--success:#2d6a4f;--danger:#8b2020;
+}
+.avra-scope {font-family:Arial,sans-serif;background:var(--surface);color:var(--text);font-size:11px;line-height:1.5}
+.avra-scope .app {display:flex;flex-direction:column;height:calc(100vh - var(--hdr-h, 106px));min-height:500px}
+.avra-scope .topbar {background:var(--navy);color:white;padding:10px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.avra-scope .brand {display:flex;align-items:center;gap:12px}
+.avra-scope .logo-mark svg {width:40px;height:40px}
+.avra-scope .brand-text h1 {font-size:15px;font-weight:700;letter-spacing:.5px;color:#fff;line-height:1.1;font-family:Arial,sans-serif}
+.avra-scope .brand-text p {font-size:10px;color:rgba(255,255,255,.55);letter-spacing:.4px;margin-top:1px;font-family:Arial,sans-serif}
+.avra-scope .topbar-actions {display:flex;gap:8px}
+.avra-scope .btn {font-family:Arial,sans-serif;font-size:11px;font-weight:700;padding:6px 13px;border-radius:4px;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:5px;transition:opacity .15s,transform .1s;white-space:nowrap}
+.avra-scope .btn:active {transform:scale(.97)}
+.avra-scope .btn-primary {background:var(--gold);color:var(--navy)}
+.avra-scope .btn-primary:hover {opacity:.9}
+.avra-scope .btn-outline {background:transparent;color:white;border:1.5px solid rgba(255,255,255,.35)}
+.avra-scope .btn-outline:hover {background:rgba(255,255,255,.1)}
+.avra-scope .btn-sm {font-size:11px;padding:5px 11px}
+.avra-scope .layout {display:flex;flex:1;overflow:hidden}
+.avra-scope .sidebar {width:300px;background:var(--white);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;display:flex;flex-direction:column}
+.avra-scope .preview-pane {flex:1;overflow-y:auto;background:var(--surface);padding:20px}
+.avra-scope .section-nav {padding:9px 13px;border-bottom:1px solid var(--border)}
+.avra-scope .section-nav p {font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:700;margin-bottom:6px}
+.avra-scope .nav-step {display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:4px;cursor:pointer;font-size:11px;color:var(--muted);transition:background .1s}
+.avra-scope .nav-step:hover, .avra-scope .nav-step.active {background:var(--light-gold);color:var(--navy)}
+.avra-scope .nav-step .dot {width:18px;height:18px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;color:var(--muted)}
+.avra-scope .nav-step.active .dot {background:var(--navy);color:white}
+.avra-scope .db-strip {background:#eef3fa;border-bottom:1px solid #c5d4e8;padding:9px 13px;flex-shrink:0}
+.avra-scope .db-strip-title {font-size:11px;font-weight:700;color:var(--navy);margin-bottom:5px}
+.avra-scope .db-strip-row {display:flex;gap:5px;align-items:center}
+.avra-scope .db-strip input[type=text] {flex:1;border:1px solid #c5d4e8;border-radius:3px;padding:5px 7px;font-size:11px;font-family:Arial,sans-serif;color:var(--text);background:white}
+.avra-scope .db-strip input[type=text]:focus {outline:none;border-color:var(--navy)}
+.avra-scope .db-status {font-size:10px;margin-top:4px;color:var(--muted)}
+.avra-scope .db-status.ok {color:var(--success);font-weight:700}
+.avra-scope .db-status.err {color:var(--danger);font-weight:700}
+.avra-scope .db-drop {width:100%;margin-top:6px;border:1.5px dashed #c5d4e8;border-radius:4px;padding:8px;text-align:center;cursor:pointer;background:white;transition:border .2s;position:relative}
+.avra-scope .db-drop:hover {border-color:var(--navy)}
+.avra-scope .db-drop p {font-size:10px;color:var(--muted);pointer-events:none}
+.avra-scope .db-drop strong {display:block;font-size:11px;color:var(--navy);margin-bottom:2px;pointer-events:none}
+.avra-scope .db-drop input[type=file] {position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.avra-scope .form-panels {flex:1;overflow-y:auto}
+.avra-scope .form-panel {display:none;padding:12px}
+.avra-scope .form-panel.active {display:block}
+.avra-scope .form-panel h3 {font-size:12px;font-weight:700;color:var(--navy);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--gold);text-transform:uppercase;letter-spacing:.4px}
+.avra-scope .field {margin-bottom:9px}
+.avra-scope .field label {display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
+.avra-scope .field input, .avra-scope .field select, .avra-scope .field textarea {width:100%;border:1px solid var(--border);border-radius:3px;padding:5px 8px;font-family:Arial,sans-serif;font-size:11px;color:var(--text);background:var(--cream);transition:border .15s}
+.avra-scope .field input:focus, .avra-scope .field select:focus, .avra-scope .field textarea:focus {outline:none;border-color:var(--navy)}
+.avra-scope .field textarea {resize:vertical;min-height:90px}
+.avra-scope .field-row {display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.avra-scope .member-card {background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:9px;margin-bottom:8px;position:relative}
+.avra-scope .member-card .member-num {font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+.avra-scope .remove-btn {position:absolute;top:7px;right:7px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px}
+.avra-scope .remove-btn:hover {color:var(--danger)}
+.avra-scope .add-member-btn {width:100%;background:var(--light-gold);border:1px dashed var(--gold);border-radius:4px;padding:7px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:var(--navy);cursor:pointer;margin-top:3px}
+.avra-scope .add-member-btn:hover {background:#f0ddb5}
+.avra-scope .panel-footer {padding:9px 13px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:6px;flex-shrink:0}
+.avra-scope .panel-nav-btn {font-family:Arial,sans-serif;font-size:11px;font-weight:700;padding:5px 12px;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--text)}
+.avra-scope .panel-nav-btn.next {background:var(--navy);color:white;border-color:var(--navy)}
+.avra-scope .chip-assist {font-size:11px;padding:4px 9px;background:var(--light-gold);border:none;border-radius:10px;cursor:pointer;font-family:Arial,sans-serif;color:var(--navy);font-weight:700;margin-top:5px;display:inline-block}
+.avra-scope .chip-assist:hover {background:#e8d098}
+.avra-scope .attach-zone {border:2px dashed var(--gold);border-radius:6px;padding:14px;text-align:center;background:var(--light-gold);cursor:pointer;position:relative;transition:border .2s}
+.avra-scope .attach-zone:hover {border-color:var(--navy)}
+.avra-scope .attach-zone input[type=file] {position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.avra-scope .attach-zone strong {display:block;font-size:12px;color:var(--navy);margin-bottom:3px}
+.avra-scope .attach-zone p {font-size:10px;color:var(--muted)}
+.avra-scope .attach-list {margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.avra-scope .attach-item {background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:7px 9px;display:flex;align-items:center;gap:7px;font-size:11px}
+.avra-scope .attach-item-name {flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--navy);font-weight:700}
+.avra-scope .attach-item-size {color:var(--muted);font-size:10px;flex-shrink:0}
+.avra-scope .attach-remove {background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;flex-shrink:0;padding:0 3px}
+.avra-scope .attach-remove:hover {color:var(--danger)}
+.avra-scope .attach-note {font-size:10px;color:var(--muted);margin-top:8px;padding:7px 9px;background:#fff8ec;border:1px solid var(--gold);border-radius:4px;line-height:1.6}
+.avra-scope .report-wrapper {
+  background:white;max-width:720px;margin:0 auto;
+  border:1px solid #bbb;box-shadow:0 2px 12px rgba(0,0,0,.08);
+  font-family:Arial,sans-serif;color:#000;font-size:11px;
+}
+.avra-scope .report-header {padding:22px 40px 14px;text-align:center;border-bottom:2.5px double #000}
+.avra-scope .report-header h2 {font-family:Arial,sans-serif;font-size:16px;letter-spacing:8px;color:#000;font-weight:700;text-transform:uppercase}
+.avra-scope .report-body {padding:16px 40px 20px}
+.avra-scope .rpt-section-title {
+  font-family:Arial,sans-serif;font-size:14px;font-weight:700;
+  color:#000;margin:14px 0 7px;text-transform:uppercase;letter-spacing:.2px;
+}
+.avra-scope .rpt-grid {display:grid;grid-template-columns:1fr 1fr;gap:7px 24px;margin-bottom:14px}
+.avra-scope .rpt-label {font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:#333;font-family:Arial,sans-serif}
+.avra-scope .rpt-value {
+  font-size:11px;color:#000;border-bottom:1px solid #aaa;
+  padding-bottom:2px;min-height:17px;font-family:Arial,sans-serif;
+  word-break:break-word;white-space:normal;
+}
+.avra-scope .rpt-table {width:100%;border-collapse:collapse;margin-bottom:14px;table-layout:fixed}
+.avra-scope .rpt-table th {
+  background:#1a2d4f;color:white;padding:5px 5px;
+  text-align:left;font-weight:700;font-size:11px;font-family:Arial,sans-serif;
+  word-wrap:break-word;
+}
+.avra-scope .rpt-table td {
+  padding:4px 5px;border-bottom:1px solid #ddd;
+  font-size:11px;font-family:Arial,sans-serif;
+  word-wrap:break-word;white-space:normal;overflow-wrap:break-word;
+}
+.avra-scope .rpt-table tr:nth-child(even) {background:#f7f7f4}
+.avra-scope .rpt-text-box {
+  border:1px solid #999;
+  padding:10px 11px;
+  font-size:11px;
+  line-height:1.75;
+  min-height:60px;
+  color:#111;
+  margin-bottom:14px;
+  font-family:Arial,sans-serif;
+  word-break:break-word;
+  white-space:pre-wrap;
+  overflow-wrap:break-word;
+  overflow:visible;
+  width:100%;
+  text-align:justify;
+  text-justify:inter-word;
+}
+.avra-scope .rpt-sig-row {
+  display:grid;grid-template-columns:1fr 1fr;gap:40px;
+  margin-top:24px;
+  page-break-inside:avoid;
+  break-inside:avoid;
+}
+.avra-scope .rpt-sig-label {font-size:11px;font-weight:700;font-family:Arial,sans-serif;color:#000;margin-bottom:2px}
+.avra-scope .rpt-sig-line {border-top:1.5px solid #000;margin-top:44px;margin-bottom:4px}
+.avra-scope .rpt-sig-name {font-weight:700;font-size:11px;color:#000;text-transform:uppercase;letter-spacing:.3px;font-family:Arial,sans-serif;word-break:break-word}
+.avra-scope .rpt-sig-position {font-size:11px;color:#333;margin-top:2px;font-family:Arial,sans-serif}
+.avra-scope .ph {color:#aaa;font-style:italic}
+.avra-scope .badge-status {display:inline-block;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:700}
+.avra-scope .badge-active {background:#d1e7dd;color:#0f5132}
+.avra-scope .badge-movout {background:#f8d7da;color:#6b1c23}
+.avra-scope .badge-inactive {background:#fff3cd;color:#856404}
+.avra-scope .attach-page-separator {
+  max-width:720px;margin:16px auto 0;
+  border:1px solid #bbb;
+  background:#f0ece4;
+  display:flex;align-items:center;justify-content:center;
+  gap:10px;padding:8px 20px;
+  font-family:Arial,sans-serif;font-size:11px;color:var(--muted);
+}
+.avra-scope .attach-page {
+  background:white;max-width:720px;margin:4px auto 0;
+  border:1px solid #bbb;box-shadow:0 2px 12px rgba(0,0,0,.08);
+  min-height:200px;overflow:hidden;
+}
+.avra-scope .attach-page-header {
+  background:#1a2d4f;color:white;padding:9px 20px;
+  font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:.4px;
+}
+.avra-scope .attach-page img {width:100%;display:block}
+.avra-scope .attach-page-iframe-wrap {width:100%;min-height:900px;position:relative}
+.avra-scope .attach-page-iframe-wrap iframe {width:100%;height:900px;border:none;display:block}
+.avra-scope .attach-page-unsupported {padding:30px;text-align:center;color:var(--muted);font-family:Arial,sans-serif;font-size:11px}
+.avra-scope .pdf-page-break {
+  page-break-before:always;
+  break-before:page;
+  display:block;
+}
+.avra-scope .aria-panel {position:fixed;bottom:14px;right:14px;width:320px;border-radius:8px;background:var(--white);border:1px solid var(--border);box-shadow:0 6px 26px rgba(0,0,0,.14);display:flex;flex-direction:column;overflow:hidden;transition:height .25s ease;z-index:9999}
+.avra-scope .aria-collapsed {height:44px}
+.avra-scope .aria-expanded {height:460px}
+.avra-scope .aria-header {background:var(--navy);padding:10px 12px;display:flex;align-items:center;gap:8px;cursor:pointer;flex-shrink:0}
+.avra-scope .aria-logo {width:24px;height:24px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--navy);flex-shrink:0}
+.avra-scope .aria-header-name {font-size:13px;font-weight:700;color:white;flex:1}
+.avra-scope .aria-toggle {color:rgba(255,255,255,.8);font-size:13px}
+.avra-scope .aria-messages {flex:1;overflow-y:auto;padding:9px 10px;display:flex;flex-direction:column;gap:7px;background:#f5f3ef}
+.avra-scope .aria-msg {max-width:88%;padding:7px 10px;border-radius:9px;font-size:11px;line-height:1.55}
+.avra-scope .aria-msg.bot {background:var(--white);border:1px solid var(--border);color:var(--text);align-self:flex-start;border-radius:2px 9px 9px 9px}
+.avra-scope .aria-msg.user {background:var(--navy);color:white;align-self:flex-end;border-radius:9px 9px 2px 9px}
+.avra-scope .aria-msg.typing {opacity:.6}
+.avra-scope .aria-chips {display:flex;gap:4px;flex-wrap:wrap;padding:5px 10px;background:#f5f3ef;border-top:1px solid var(--border)}
+.avra-scope .aria-chip {font-size:10px;padding:3px 8px;background:var(--light-gold);border:none;border-radius:9px;cursor:pointer;font-family:Arial,sans-serif;color:var(--navy);font-weight:700}
+.avra-scope .aria-chip:hover {background:#e8d098}
+.avra-scope .aria-input-row {display:flex;gap:5px;padding:7px 9px;border-top:1px solid var(--border);flex-shrink:0;background:white}
+.avra-scope .aria-input {flex:1;border:1px solid var(--border);border-radius:12px;padding:5px 10px;font-family:Arial,sans-serif;font-size:11px;background:var(--cream)}
+.avra-scope .aria-input:focus {outline:none;border-color:var(--navy)}
+.avra-scope .aria-send {background:var(--navy);border:none;border-radius:12px;padding:5px 11px;color:white;font-size:11px;font-weight:700;cursor:pointer}
+.avra-scope .aria-send:hover {opacity:.85}
+.avra-scope .pdf-overlay {position:fixed;inset:0;background:rgba(26,45,79,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;gap:14px}
+.avra-scope .pdf-overlay p {color:white;font-family:Arial,sans-serif;font-size:13px;font-weight:700}
+.avra-scope .pdf-spinner {width:38px;height:38px;border:4px solid rgba(255,255,255,.25);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* ════════════════════════════════════════════════════════════
+   SHELL EXTRAS — tab switching, two-row header w/ tab nav,
+   Dashboard, HOPE filter bar. Lives in the same global (CAMP)
+   theme, so it reuses --bg/--surf/--accent/etc. and existing
+   .card/.btn-sec/.btn-pri/.stat-grid/.dot/.sbadge classes.
+   ════════════════════════════════════════════════════════════ */
+
+/* ─── TAB PANELS ────────────────────────────────────────────── */
+.tab-panel { display: none; }
+.tab-panel.tab-active { display: block; }
+
+/* ─── HEADER: two rows (brand+actions, then tab nav) ──────────── */
+header { flex-direction: column; height: auto; padding: 0; }
+.hdr-row {
+  padding: 0 20px; height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; min-width: 0;
+}
+.tabnav {
+  display: flex; gap: 4px; height: 46px;
+  padding: 0 16px; align-items: center;
+  border-top: 1px solid var(--border);
+  overflow-x: auto;
+}
+.tab-btn {
+  background: none; border: 1px solid transparent; color: var(--tx2);
+  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+  padding: 6px 15px; border-radius: 7px; cursor: pointer; white-space: nowrap;
+  transition: background .15s, color .15s;
+}
+.tab-btn:hover { background: var(--surf2); color: var(--tx); }
+.tab-btn.active { background: var(--surf2); color: var(--accent); border-color: var(--border); }
+
+/* ─── DASHBOARD ─────────────────────────────────────────────── */
+.dash-hero { text-align: center; padding: 44px 0 36px; max-width: 680px; margin: 0 auto; }
+.dash-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+  max-width: 1000px; margin: 0 auto 28px;
+}
+@media (max-width: 860px) { .dash-grid { grid-template-columns: 1fr; } }
+.dash-card {
+  background: var(--surf); border: 1px solid var(--border); border-radius: 14px;
+  padding: 22px; cursor: pointer; transition: border-color .2s, transform .15s;
+}
+.dash-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.dash-card-icon {
+  width: 38px; height: 38px; border-radius: 9px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800;
+  margin-bottom: 14px; color: var(--bg);
+}
+.dash-ic-camp { background: linear-gradient(135deg, var(--accent), var(--blue)); }
+.dash-ic-avra { background: linear-gradient(135deg, #c8973a, #e8d098); }
+.dash-ic-hope { background: linear-gradient(135deg, var(--ok), #2dd4bf); }
+.dash-card h3 { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 800; margin-bottom: 3px; }
+.dash-card-sub { font-size: 11px; color: var(--tx3); letter-spacing: .03em; margin-bottom: 10px; }
+.dash-card p { font-size: 13px; color: var(--tx2); line-height: 1.55; margin-bottom: 14px; }
+.dash-card-go { font-size: 12px; font-weight: 700; color: var(--accent); }
+.dash-report-cta {
+  max-width: 1000px; margin: 0 auto; background: var(--surf); border: 1px solid var(--border);
+  border-radius: 14px; padding: 20px 24px; display: flex; align-items: center;
+  justify-content: space-between; gap: 16px; flex-wrap: wrap;
+}
+.dash-report-cta h3 { font-size: 15px; margin-bottom: 3px; }
+.dash-report-cta p { font-size: 13px; color: var(--tx2); }
+
+/* ─── HOPE: filter bar ──────────────────────────────────────── */
+.filter-bar { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+.filter-field { flex: 1; min-width: 170px; }
+.filter-field label {
+  display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .1em;
+  color: var(--tx3); margin-bottom: 6px;
+}
+.filter-field select {
+  width: 100%; background: var(--surf2); border: 1.5px solid var(--border);
+  border-radius: 8px; padding: 9px 12px; color: var(--tx);
+  font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none; cursor: pointer;
+}
+.filter-field select:focus { border-color: var(--accent); }
+.filter-check {
+  display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--tx2);
+  padding-bottom: 9px; white-space: nowrap;
+}
+.filter-check input { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+.hope-pager {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 18px; border-top: 1px solid var(--border);
+}
+</style>
+</head>
+<body>
+<!-- ─── SHARED HEADER ─────────────────────────────────────── -->
+<header>
+  <div class="hdr-row">
+    <div class="logo">
+      <div class="logo-icon">S</div>
+      <div class="logo-words">
+        <div class="logo-name">SDN BDM Suite</div>
+        <div class="logo-full">CAMP · AVRA · HOPE</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <span class="data-chip" id="dataChip">
+        <span class="dot" id="shellDot"></span>
+        <span id="chipLabel">—</span>
+      </span>
+      <button class="btn-hdr btn-admin" onclick="App.openGate()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Admin
+      </button>
+    </div>
+  </div>
+  <nav class="tabnav">
+    <button class="tab-btn" data-tab="dashboard">Dashboard</button>
+    <button class="tab-btn" data-tab="camp">CAMP</button>
+    <button class="tab-btn" data-tab="avra">AVRA</button>
+    <button class="tab-btn" data-tab="hope">HOPE</button>
+  </nav>
+</header>
+
+<!-- ─── TAB: DASHBOARD ────────────────────────────────────── -->
+<section class="tab-panel" id="tab-dashboard">
+  <div class="page">
+
+    <div class="dash-hero">
+      <div class="hero-tag">Surigao del Norte · Beneficiary Data Management</div>
+      <h1>SDN BDM Suite</h1>
+      <p>Three tools for monitoring 4Ps households, building validation reports, and identifying households ready for program exit.</p>
+    </div>
+
+    <div class="dash-grid">
+      <div class="dash-card" data-goto="camp">
+        <div class="dash-card-icon dash-ic-camp">C</div>
+        <h3>CAMP</h3>
+        <p class="dash-card-sub">Centralized Analytics &amp; Management Platform</p>
+        <p>Look up a household by ID to review family composition and flag education-monitoring inconsistencies.</p>
+        <span class="dash-card-go">Open CAMP →</span>
+      </div>
+      <div class="dash-card" data-goto="avra">
+        <div class="dash-card-icon dash-ic-avra">A</div>
+        <h3>AVRA</h3>
+        <p class="dash-card-sub">Automated Validation Report Assistant</p>
+        <p>Build a formal validation report with autofilled household data, AI-assisted writing, and PDF export.</p>
+        <span class="dash-card-go">Open AVRA →</span>
+      </div>
+      <div class="dash-card" data-goto="hope">
+        <div class="dash-card-icon dash-ic-hope">H</div>
+        <h3>HOPE</h3>
+        <p class="dash-card-sub">Households Outgrowing Program Eligibility</p>
+        <p>See which active households no longer have monitored school-age children and may be ready for natural attrition.</p>
+        <span class="dash-card-go">Open HOPE →</span>
+      </div>
+    </div>
+
+    <div class="dash-report-cta">
+      <div>
+        <h3>Found a discrepancy in the field?</h3>
+        <p>Submit a report so the BDM team can review and update the roster.</p>
+      </div>
+      <a class="btn-hdr btn-report" href="https://forms.gle/iEsqvNpYRPCUK56e7" target="_blank" rel="noopener">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
+        Submit a Report
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<!-- ─── TAB: CAMP ──────────────────────────────────────────── -->
+<section class="tab-panel" id="tab-camp">
+<!-- ─── PAGE ─────────────────────────────────────────────── -->
+<div class="page">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-tag">View Only · Read Access</div>
+    <h1>Household Lookup</h1>
+    <p>Enter a Household ID to view family composition, member details, and automatically detect data inconsistencies.</p>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="e.g. 035416004-4990-00001" autocomplete="off" spellcheck="false">
+      <button class="btn-search" onclick="CAMP.doSearch()">Search</button>
+    </div>
+    <div class="search-hint">Press <kbd>Enter</kbd> to search</div>
+    <div class="status-bar">
+      <div class="dot" id="statusDot"></div>
+      <span id="statusText">Initializing…</span>
+    </div>
+  </div>
+
+  <!-- EMPTY STATE -->
+  <div id="emptyState">
+    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="1.5" style="display:block;margin:0 auto 14px">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      <line x1="11" y1="8" x2="11" y2="11"/><line x1="11" y1="14" x2="11.01" y2="14"/>
+    </svg>
+    <h3 id="emptyTitle">No household found</h3>
+    <p id="emptyMsg"></p>
+  </div>
+  <!-- RESULTS -->
+  <div id="results">
+    <div class="layout">
+
+      <!-- LEFT COLUMN -->
+      <div style="min-width:0">
+
+        <!-- HH Info -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Household Information</span>
+            <span id="hhBadge"></span>
+          </div>
+          <div class="card-body">
+            <div class="hh-name" id="hhName"></div>
+            <div class="hh-id"   id="hhId"></div>
+            <div class="info-grid" id="hhInfo"></div>
+          </div>
+        </div>
+
+        <!-- Family Table -->
+        <div class="divider"><span>Family Composition</span></div>
+
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Members</span>
+            <span id="memberCount" style="font-size:11px;color:var(--tx3)"></span>
+          </div>
+          <!-- SCROLLABLE TABLE CONTAINER -->
+          <div class="tbl-outer">
+            <table>
+              <thead>
+                <tr>
+                  <th>Entry ID</th>
+                  <th>Name</th>
+                  <th>Relationship</th>
+                  <th>Status</th>
+                  <th>Sex</th>
+                  <th>Age</th>
+                  <th>Birthday</th>
+                  <th>PWD</th>
+                  <th>Pregnancy</th>
+                  <th>Educ. Mon.</th>
+                  <th>Attending</th>
+                  <th>Grade Level</th>
+                  <th>School Name</th>
+                </tr>
+              </thead>
+              <tbody id="tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL -->
+      <div class="panel">
+        <div class="card">
+          <div class="card-head"><span class="card-title">Summary</span></div>
+          <div class="card-body">
+            <div class="stat-grid" id="stats"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Inconsistencies</span>
+            <span id="issueCount" style="font-size:11px;color:var(--tx3)"></span>
+          </div>
+          <div class="card-body">
+            <div class="issues" id="issueList"></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.layout -->
+  </div><!-- /#results -->
+
+</div><!-- /.page -->
+</section>
+
+<!-- ─── TAB: AVRA ──────────────────────────────────────────── -->
+<section class="tab-panel" id="tab-avra">
+<div class="avra-scope">
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo-mark">
+        <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="20" cy="20" r="19" fill="#c8973a"/>
+          <rect x="8" y="11" width="24" height="18" rx="2" fill="#1a2d4f"/>
+          <rect x="11" y="14.5" width="9" height="1.5" rx=".75" fill="white" opacity=".85"/>
+          <rect x="11" y="17.5" width="15" height="1.5" rx=".75" fill="white" opacity=".85"/>
+          <rect x="11" y="20.5" width="12" height="1.5" rx=".75" fill="white" opacity=".85"/>
+          <rect x="11" y="23.5" width="7" height="1.5" rx=".75" fill="white" opacity=".85"/>
+          <circle cx="29" cy="29" r="6.5" fill="#c8973a" stroke="white" stroke-width="1.5"/>
+          <text x="29" y="32.5" text-anchor="middle" font-size="8.5" font-weight="700" fill="#1a2d4f" font-family="Arial,sans-serif">A</text>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>AVRA</h1>
+        <p>Automated Validation Report Assistant</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-outline btn-sm" onclick="AVRA.resetForm()">↺ Reset</button>
+      <button class="btn btn-primary btn-sm" onclick="AVRA.downloadPDF()">⬇ Download PDF</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="sidebar">
+      <div class="db-strip">
+        <div class="db-strip-title">🔍 Household Lookup</div>
+        <div class="db-strip-row">
+          <input type="text" id="hhid-search" placeholder="Enter Household ID..." onkeydown="if(event.key==='Enter')AVRA.searchHH()">
+          <button class="btn btn-primary btn-sm" onclick="AVRA.searchHH()">Search</button>
+        </div>
+        <div class="db-status" id="db-status">Loading roster data, please wait…</div>
+        <div id="db-loaded-info" style="font-size:10px;color:var(--success);margin-top:4px;font-weight:700;display:none"></div>
+      </div>
+
+      <div class="section-nav">
+        <p>Sections</p>
+        <div class="nav-step active" onclick="AVRA.showPanel(0)" id="nav0"><div class="dot">1</div> Household Profile</div>
+        <div class="nav-step" onclick="AVRA.showPanel(1)" id="nav1"><div class="dot">2</div> Family Composition</div>
+        <div class="nav-step" onclick="AVRA.showPanel(2)" id="nav2"><div class="dot">3</div> Findings</div>
+        <div class="nav-step" onclick="AVRA.showPanel(3)" id="nav3"><div class="dot">4</div> Assessment</div>
+        <div class="nav-step" onclick="AVRA.showPanel(4)" id="nav4"><div class="dot">5</div> Recommendation</div>
+        <div class="nav-step" onclick="AVRA.showPanel(5)" id="nav5"><div class="dot">6</div> Signatories</div>
+        <div class="nav-step" onclick="AVRA.showPanel(6)" id="nav6"><div class="dot">📎</div> Attachments</div>
+      </div>
+
+      <div class="form-panels">
+        <!-- Panel 0: Household Profile -->
+        <div class="form-panel active" id="panel0">
+          <h3>Household Profile</h3>
+          <div class="field"><label>Household ID Number</label><input type="text" id="hhid" placeholder="Auto-filled from search" oninput="AVRA.updatePreview()"></div>
+          <div class="field"><label>Date</label><input type="date" id="repdate" oninput="AVRA.updatePreview()"></div>
+          <div class="field"><label>Grantee's Name</label><input type="text" id="grantee" placeholder="Auto-filled from search" oninput="AVRA.updatePreview()"></div>
+          <div class="field"><label>Present Address</label><input type="text" id="address" placeholder="Auto-filled from search" oninput="AVRA.updatePreview()"></div>
+          <div class="field-row">
+            <div class="field"><label>Client Status</label><input type="text" id="clientstatus" placeholder="Auto-filled" oninput="AVRA.updatePreview()"></div>
+            <div class="field"><label>HH Set</label><input type="text" id="hhset" placeholder="Auto-filled" oninput="AVRA.updatePreview()"></div>
+          </div>
+          <div class="field"><label>Contact Number</label><input type="text" id="contact" placeholder="Not Shared" oninput="AVRA.updatePreview()"></div>
+        </div>
+
+        <!-- Panel 1: Family Composition -->
+        <div class="form-panel" id="panel1">
+          <h3>Family Composition</h3>
+          <div id="members-container"></div>
+          <button class="add-member-btn" onclick="AVRA.addMember()">+ Add Member</button>
+        </div>
+
+        <!-- Panel 2: Findings -->
+        <div class="form-panel" id="panel2">
+          <h3>Findings</h3>
+          <div class="field"><label>Findings / Observations</label><textarea id="findings" rows="10" placeholder="Describe the findings from the validation visit..." oninput="AVRA.updatePreview()"></textarea></div>
+          <button class="chip-assist" onclick="AVRA.openARIA('Please polish and improve my Findings draft: '+document.getElementById('findings').value)">✨ Polish with ARIA</button>
+        </div>
+
+        <!-- Panel 3: Assessment -->
+        <div class="form-panel" id="panel3">
+          <h3>Assessment</h3>
+          <div class="field"><label>Assessment / Evaluation</label><textarea id="assessment" rows="10" placeholder="Provide your assessment based on documents and validation..." oninput="AVRA.updatePreview()"></textarea></div>
+          <button class="chip-assist" onclick="AVRA.openARIA('Please polish and improve my Assessment draft: '+document.getElementById('assessment').value)">✨ Polish with ARIA</button>
+        </div>
+
+        <!-- Panel 4: Recommendation -->
+        <div class="form-panel" id="panel4">
+          <h3>Recommendation</h3>
+          <div class="field"><label>Recommendation</label><textarea id="recommendation" rows="10" placeholder="State your recommendation for the household's grant status..." oninput="AVRA.updatePreview()"></textarea></div>
+          <button class="chip-assist" onclick="AVRA.openARIA('Please polish and improve my Recommendation draft: '+document.getElementById('recommendation').value)">✨ Polish with ARIA</button>
+        </div>
+
+        <!-- Panel 5: Signatories -->
+        <div class="form-panel" id="panel5">
+          <h3>Signatories</h3>
+          <div class="field"><label>Prepared by — Name</label><input type="text" id="prepname" placeholder="Full name" oninput="AVRA.updatePreview()"></div>
+          <div class="field"><label>Prepared by — Position</label><input type="text" id="preppos" placeholder="e.g. Project Development Officer II" oninput="AVRA.updatePreview()"></div>
+          <div class="field" style="margin-top:12px"><label>Reviewed and Noted by — Name</label><input type="text" id="revname" placeholder="Full name" oninput="AVRA.updatePreview()"></div>
+          <div class="field"><label>Reviewed and Noted by — Position</label><input type="text" id="revpos" placeholder="e.g. Social Welfare Officer III" oninput="AVRA.updatePreview()"></div>
+          <div style="margin-top:14px"><button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px;font-size:12px" onclick="AVRA.downloadPDF()">⬇ Generate & Download PDF</button></div>
+        </div>
+
+        <!-- Panel 6: Attachments -->
+        <div class="form-panel" id="panel6">
+          <h3>📎 Attachments <span style="font-size:10px;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">(Optional)</span></h3>
+          <div class="attach-note">
+            <strong>ℹ️ How attachments work:</strong><br>
+            Attached files will be added as <strong>separate pages</strong> after the Validation Report in the generated PDF — they are <em>not</em> part of the report itself. This creates a complete package document for reference.<br><br>
+            Supported: <strong>PDF, PNG, JPG, GIF, WebP</strong>. Each file becomes its own section.
+          </div>
+          <div style="margin-top:10px" class="attach-zone" id="attach-zone">
+            <strong>📂 Click to add attachment files</strong>
+            <p>PDF or image files (you can select multiple)</p>
+            <input type="file" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp" multiple onchange="AVRA.handleAttachments(this)">
+          </div>
+          <div class="attach-list" id="attach-list"></div>
+          <div id="attach-count-msg" style="font-size:10px;color:var(--muted);margin-top:6px;display:none"></div>
+        </div>
+      </div>
+
+      <div class="panel-footer">
+        <button class="panel-nav-btn" id="prevBtn" onclick="AVRA.prevPanel()" style="display:none">← Back</button>
+        <button class="panel-nav-btn next" id="nextBtn" onclick="AVRA.nextPanel()">Next →</button>
+      </div>
+    </div>
+
+    <!-- PREVIEW PANE -->
+    <div class="preview-pane">
+      <!-- Main report -->
+      <div id="report-content" class="report-wrapper">
+        <div class="report-header">
+          <h2>V A L I D A T I O N &nbsp;&nbsp; R E P O R T</h2>
+        </div>
+        <div class="report-body">
+          <div class="rpt-section-title">Household Profile Summary</div>
+          <div class="rpt-grid">
+            <div>
+              <div class="rpt-label">Household ID Number</div>
+              <div class="rpt-value" id="pv-hhid"><span class="ph">—</span></div>
+            </div>
+            <div>
+              <div class="rpt-label">Date</div>
+              <div class="rpt-value" id="pv-date"><span class="ph">—</span></div>
+            </div>
+            <div>
+              <div class="rpt-label">Grantee's Name</div>
+              <div class="rpt-value" id="pv-grantee"><span class="ph">—</span></div>
+            </div>
+            <div>
+              <div class="rpt-label">Present Address</div>
+              <div class="rpt-value" id="pv-address"><span class="ph">—</span></div>
+            </div>
+            <div>
+              <div class="rpt-label">Client Status | HH Set</div>
+              <div class="rpt-value" id="pv-status"><span class="ph">—</span></div>
+            </div>
+            <div>
+              <div class="rpt-label">Contact Number</div>
+              <div class="rpt-value" id="pv-contact"><span class="ph">—</span></div>
+            </div>
+          </div>
+
+          <div class="rpt-section-title">Family Composition</div>
+          <table class="rpt-table">
+            <thead><tr>
+              <th style="width:13%">Entry ID</th>
+              <th style="width:28%">Name</th>
+              <th style="width:17%">Relationship</th>
+              <th style="width:14%">Birthdate</th>
+              <th style="width:6%">Age</th>
+              <th style="width:22%">Status</th>
+            </tr></thead>
+            <tbody id="pv-members-body">
+              <tr><td colspan="6" style="text-align:center;color:#aaa;font-style:italic;padding:10px">No members loaded yet</td></tr>
+            </tbody>
+          </table>
+
+          <div class="rpt-section-title">Findings</div>
+          <div class="rpt-text-box" id="pv-findings"><span class="ph">Findings will appear here...</span></div>
+
+          <div class="rpt-section-title">Assessment</div>
+          <div class="rpt-text-box" id="pv-assessment"><span class="ph">Assessment will appear here...</span></div>
+
+          <div class="rpt-section-title">Recommendation</div>
+          <div class="rpt-text-box" id="pv-recommendation"><span class="ph">Recommendation will appear here...</span></div>
+
+          <div class="rpt-sig-row">
+            <div>
+              <div class="rpt-sig-label">Prepared by:</div>
+              <div class="rpt-sig-line"></div>
+              <div class="rpt-sig-name" id="pv-prepname"><span class="ph">Name of Preparer</span></div>
+              <div class="rpt-sig-position" id="pv-preppos"><span class="ph">Position</span></div>
+            </div>
+            <div>
+              <div class="rpt-sig-label">Reviewed and Noted by:</div>
+              <div class="rpt-sig-line"></div>
+              <div class="rpt-sig-name" id="pv-revname"><span class="ph">Reviewing Officer</span></div>
+              <div class="rpt-sig-position" id="pv-revpos"><span class="ph">Position</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Attachment previews (shown dynamically) -->
+      <div id="attach-previews-wrap"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ARIA -->
+<div class="aria-panel aria-collapsed" id="aria-panel">
+  <div class="aria-header" onclick="AVRA.toggleARIA()">
+    <div class="aria-logo">A</div>
+    <div class="aria-header-name">ARIA</div>
+    <span class="aria-toggle" id="aria-toggle">▲</span>
+  </div>
+  <div class="aria-messages" id="aria-messages">
+    <div class="aria-msg bot">🌟 Hi! I'm <strong>ARIA</strong>, your AI writing assistant.<br><br>I specialize in <strong>polishing your drafts</strong> — paste your rough Findings, Assessment, or Recommendation and I'll improve the grammar, clarity, and professional tone while keeping your original observations intact.<br><br>You can also give me bullet points or key notes and I'll write a full paragraph for you. Use the quick buttons below to get started!</div>
+  </div>
+  <div class="aria-chips">
+    <button class="aria-chip" onclick="AVRA.sendQuick('Please polish and improve my Findings draft: '+document.getElementById('findings').value)">✨ Polish Findings</button>
+    <button class="aria-chip" onclick="AVRA.sendQuick('Please polish and improve my Assessment draft: '+document.getElementById('assessment').value)">✨ Polish Assessment</button>
+    <button class="aria-chip" onclick="AVRA.sendQuick('Please polish and improve my Recommendation draft: '+document.getElementById('recommendation').value)">✨ Polish Recommendation</button>
+    <button class="aria-chip" onclick="AVRA.sendQuick('Help me write the Findings section from scratch')">📝 Write Findings</button>
+  </div>
+  <div class="aria-input-row">
+    <input type="text" class="aria-input" id="aria-input" placeholder="Type your message..." onkeydown="if(event.key==='Enter')AVRA.sendARIA()">
+    <button class="aria-send" onclick="AVRA.sendARIA()">Send</button>
+  </div>
+</div></div><!-- /.avra-scope -->
+</section>
+
+<!-- ─── TAB: HOPE ──────────────────────────────────────────── -->
+<section class="tab-panel" id="tab-hope">
+  <div class="page">
+
+    <div class="hero" style="padding-bottom:24px">
+      <div class="hero-tag">Active Caseload Review</div>
+      <h1>HOPE</h1>
+      <p>Households Outgrowing Program Eligibility — beneficiaries whose monitored children have aged out or already graduated high school, and may be ready for natural attrition.</p>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-body">
+        <div class="filter-bar">
+          <div class="filter-field">
+            <label>Municipality</label>
+            <select id="hopeMuni"><option value="ALL">All Municipalities</option></select>
+          </div>
+          <div class="filter-field">
+            <label>Barangay</label>
+            <select id="hopeBrgy"><option value="ALL">All Barangays</option></select>
+          </div>
+          <label class="filter-check">
+            <input type="checkbox" id="hopeActiveOnly" checked>
+            Active households only
+          </label>
+          <button class="btn-sec" id="hopeExport">⬇ Export CSV</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="hopeStatus" style="text-align:center;color:var(--tx3);font-size:13px;padding:20px 0"></div>
+
+    <div class="stat-grid" id="hopeSummary" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px"></div>
+
+    <div class="card">
+      <div class="card-head"><span class="card-title">Exit Candidates</span></div>
+      <div class="tbl-outer">
+        <table>
+          <thead>
+            <tr>
+              <th>HH ID</th><th>Grantee</th><th>Municipality</th><th>Barangay</th>
+              <th>Members</th><th>Status</th><th>Reason</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="hopeTbody"></tbody>
+        </table>
+      </div>
+      <div class="hope-pager">
+        <button class="btn-sec" id="hopePrev">← Prev</button>
+        <span id="hopePageInfo" style="font-size:12px;color:var(--tx3)"></span>
+        <button class="btn-sec" id="hopeNext">Next →</button>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ─── MODAL: PASSWORD GATE ──────────────────────────────── -->
+<div class="overlay" id="pwModal">
+  <div class="modal" style="max-width:360px">
+    <div style="text-align:center;margin-bottom:18px">
+      <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--blue));display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <h2 style="font-size:17px">Admin Access</h2>
+      <p class="msub" style="margin-bottom:0">Enter the admin password to configure the data source.</p>
+    </div>
+    <label>Password</label>
+    <input type="password" id="pwInput" placeholder="Enter admin password"
+           onkeydown="if(event.key==='Enter')App.checkPw()">
+    <div class="err-msg" id="pwErr">Incorrect password. Please try again.</div>
+    <div class="mactions">
+      <button class="btn-sec" onclick="App.closeModal('pwModal')">Cancel</button>
+      <button class="btn-pri" onclick="App.checkPw()">Unlock</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── MODAL: ADMIN CONFIG ───────────────────────────────── -->
+<div class="overlay" id="adminModal">
+  <div class="modal" style="max-width:480px">
+    <h2>⚙️ Data Source Configuration</h2>
+    <p class="msub">Upload the monthly JSON roster file. The platform updates instantly. Only admins can perform this action.</p>
+
+    <div class="info-box">
+      <b>Required JSON schema:</b><br>
+      <code style="font-size:11px;color:var(--accent)">
+        { "meta": { "month":…, "total_members":… }, "headers": […], "households": { "HH_ID": [[…row…], …] } }
+      </code><br><br>
+      Use the provided Python converter script to generate this from the monthly <b>.xlsx</b> file.
+    </div>
+
+    <div class="uzone" id="uzone" >
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      <p>Click or drag &amp; drop a JSON file here</p>
+      <small>Only .json files are accepted</small>
+    </div>
+    <input type="file" id="jsonFile" accept=".json" style="display:none" >
+    <div id="fileStatus"></div>
+    <div id="curData"><div class="info-box" id="curDataText"></div></div>
+
+    <div class="mactions">
+      <button class="btn-sec" onclick="App.closeModal('adminModal')">Close</button>
+      <button class="btn-pri" id="loadBtn" onclick="App.loadFile()" disabled>Load Data</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// SHARED SCHEMA — same column order for every roster row,
+// used by CAMP and HOPE (AVRA only needs a handful of fields,
+// see its own smaller F map).
+// ════════════════════════════════════════════════════════════
+const SDN_COLS = {
+  REGION:0,PROV:1,MUNI:2,BRNGY:3,HH_ID:4,ENTRY:5,
+  FN:6,MN:7,LN:8,EXT:9,BDAY:10,AGE:11,AGE_E:12,SEX:13,
+  CS:14,CS_CAT:15,MS:16,REL:17,CIVIL:18,GRANTEE:19,
+  SET:20,SOLO:21,IP:22,PCN:23,PCN_R:24,PREG:25,LMP:26,
+  H_MON:27,H_FAC:28,H_FST:29,R_H:30,R_HR:31,
+  DIS:32,CBENE:33,GRADE:34,SHS_S:35,SHS_T:36,
+  E_MON:37,ATTEND:38,SCHOOL:39,R_E:40,R_ER:41,LRN:42,LRN_R:43
+};
+
+// ════════════════════════════════════════════════════════════
+// SHELL — tab switching, the single shared roster loader
+// (auto-fetch + manual admin upload), and the admin password
+// gate. CAMP / AVRA / HOPE each receive the same parsed roster
+// object exactly once via their own setDB(data).
+// ════════════════════════════════════════════════════════════
+const App = (function(){
+  let DB = null;
+  let pickedFile = null;
+  const ADMIN_PASSWORD = 'SDNBDMGuardians26';
+  const ROSTER_URL = 'roster.json.gz';
+
+  // ─── TABS ──────────────────────────────────────────────────
+  const TABS = ['dashboard','camp','avra','hope'];
+
+  function switchTab(name, opts){
+    opts = opts || {};
+    if (TABS.indexOf(name) === -1) name = 'dashboard';
+    TABS.forEach(t => {
+      const panel = document.getElementById('tab-' + t);
+      const btn   = document.querySelector('.tab-btn[data-tab="' + t + '"]');
+      if (panel) panel.classList.toggle('tab-active', t === name);
+      if (btn)   btn.classList.toggle('active', t === name);
+    });
+    if (!opts.silent) {
+      history.replaceState(null, '', '#' + name);
+    }
+    if (name === 'hope' && typeof HOPE !== 'undefined') HOPE.onShow();
+    window.scrollTo({top:0, behavior:'instant'});
+  }
+
+  function initialTab(){
+    const h = (location.hash || '').replace('#','');
+    return TABS.indexOf(h) !== -1 ? h : 'dashboard';
+  }
+
+  // ─── DB DISTRIBUTION ───────────────────────────────────────
+  function setDB(data){
+    DB = data;
+    if (typeof CAMP !== 'undefined') CAMP.setDB(data);
+    if (typeof AVRA !== 'undefined') AVRA.setDB(data);
+    if (typeof HOPE !== 'undefined') HOPE.setDB(data);
+    refreshChip();
+  }
+
+  function refreshChip(){
+    const chip = document.getElementById('dataChip');
+    const dot  = document.getElementById('shellDot');
+    const lbl  = document.getElementById('chipLabel');
+    if (!DB){
+      dot.className = 'dot err';
+      lbl.textContent = 'No data loaded';
+      chip.style.display = 'inline-flex';
+      return;
+    }
+    const hc = Object.keys(DB.households).length;
+    dot.className = 'dot ok';
+    lbl.textContent = (DB.meta.month || 'Roster') + ' · ' + hc.toLocaleString() + ' HH';
+    chip.style.display = 'inline-flex';
+  }
+
+  // ─── AUTO FETCH ────────────────────────────────────────────
+  function fetchRoster(){
+    const dot = document.getElementById('shellDot');
+    const lbl = document.getElementById('chipLabel');
+    dot.className = 'dot loading';
+    lbl.textContent = 'Loading roster…';
+    document.getElementById('dataChip').style.display = 'inline-flex';
+
+    fetch(ROSTER_URL)
+      .then(r => {
+        if (!r.ok) throw new Error('roster.json.gz not found (HTTP ' + r.status + ')');
+        const ds = new DecompressionStream('gzip');
+        const decompressed = r.body.pipeThrough(ds);
+        return new Response(decompressed).text();
+      })
+      .then(text => {
+        const data = JSON.parse(text);
+        if (!data.households || !data.headers) throw new Error('Invalid roster schema');
+        setDB(data);
+      })
+      .catch(err => {
+        console.warn('Auto-fetch failed:', err.message);
+        dot.className = 'dot err';
+        lbl.textContent = 'Could not auto-load — Admin can upload manually';
+      });
+  }
+
+  // ─── ADMIN GATE / UPLOAD MODAL ─────────────────────────────
+  function openGate(){
+    document.getElementById('pwModal').classList.add('open');
+    setTimeout(() => document.getElementById('pwInput').focus(), 80);
+  }
+  function closeModal(id){
+    document.getElementById(id).classList.remove('open');
+    if (id === 'pwModal'){
+      document.getElementById('pwInput').value = '';
+      document.getElementById('pwErr').style.display = 'none';
+    }
+  }
+  function checkPw(){
+    if (document.getElementById('pwInput').value === ADMIN_PASSWORD){
+      closeModal('pwModal');
+      openAdmin();
+    } else {
+      const e = document.getElementById('pwErr');
+      e.style.display = 'block';
+      document.getElementById('pwInput').value = '';
+      document.getElementById('pwInput').focus();
+      setTimeout(() => e.style.display = 'none', 3000);
+    }
+  }
+  function openAdmin(){
+    pickedFile = null;
+    document.getElementById('fileStatus').style.display = 'none';
+    document.getElementById('fileStatus').textContent   = '';
+    document.getElementById('loadBtn').disabled = true;
+    if (DB){
+      const hc = Object.keys(DB.households).length;
+      const mc = DB.meta.total_members || '?';
+      document.getElementById('curDataText').innerHTML =
+        `<b>Currently loaded:</b> ${DB.meta.month||'N/A'} &nbsp;·&nbsp; `+
+        `${hc.toLocaleString()} households &nbsp;·&nbsp; ${mc.toLocaleString()} members`;
+      document.getElementById('curData').style.display = 'block';
+    }
+    document.getElementById('adminModal').classList.add('open');
+  }
+  function onFilePick(e){
+    const f = e.target.files[0];
+    if (f) applyFile(f);
+  }
+  function applyFile(f){
+    if (!f.name.endsWith('.json')) { alert('Please select a .json file.'); return; }
+    pickedFile = f;
+    const fs = document.getElementById('fileStatus');
+    fs.textContent = '✓ ' + f.name + ' (' + (f.size/1024).toFixed(1) + ' KB)';
+    fs.style.display = 'block';
+    document.getElementById('loadBtn').disabled = false;
+    document.getElementById('uzone').style.borderColor = 'var(--accent)';
+  }
+  function loadFile(){
+    if (!pickedFile) return;
+    const r = new FileReader();
+    r.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!data.households || !data.headers) throw new Error('Invalid roster schema');
+        setDB(data);
+        closeModal('adminModal');
+        const hc = Object.keys(data.households).length;
+        const mc = data.meta.total_members || Object.values(data.households).flat().length;
+        alert('✓ Data loaded!\n' + hc.toLocaleString() + ' households · ' + mc.toLocaleString() + ' members');
+      } catch(err) {
+        alert('Error: ' + err.message + '\nMake sure the file matches the roster JSON schema.');
+      }
+    };
+    r.readAsText(pickedFile);
+  }
+
+  // ─── HEADER HEIGHT SYNC (AVRA's panel needs to know the exact
+  // rendered header height — fonts/borders can shift it a few px
+  // from any hardcoded guess) ─────────────────────────────────
+  function syncHeaderHeight(){
+    const h = document.querySelector('header');
+    if (h) document.documentElement.style.setProperty('--hdr-h', h.getBoundingClientRect().height + 'px');
+  }
+
+  // ─── INIT ──────────────────────────────────────────────────
+  function init(){
+    // Tab nav clicks
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
+    document.querySelectorAll('[data-goto]').forEach(el => {
+      el.addEventListener('click', () => switchTab(el.dataset.goto));
+    });
+    switchTab(initialTab(), {silent:true});
+
+    syncHeaderHeight();
+    window.addEventListener('resize', syncHeaderHeight);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(syncHeaderHeight);
+
+    // Drag & drop on the admin upload zone
+    const uz = document.getElementById('uzone');
+    uz.addEventListener('click', () => document.getElementById('jsonFile').click());
+    uz.addEventListener('dragover',  e => { e.preventDefault(); uz.classList.add('over'); });
+    uz.addEventListener('dragleave', () => uz.classList.remove('over'));
+    uz.addEventListener('drop', e => {
+      e.preventDefault(); uz.classList.remove('over');
+      const f = e.dataTransfer.files[0];
+      if (f) applyFile(f);
+    });
+    document.getElementById('jsonFile').addEventListener('change', onFilePick);
+
+    document.querySelectorAll('.overlay').forEach(o =>
+      o.addEventListener('click', e => { if (e.target === o) closeModal(o.id); })
+    );
+
+    if (typeof CAMP !== 'undefined') CAMP.init();
+    if (typeof AVRA !== 'undefined') AVRA.init();
+    if (typeof HOPE !== 'undefined') HOPE.init();
+
+    fetchRoster();
+  }
+
+  return { switchTab, openGate, closeModal, checkPw, openAdmin, loadFile, setDB, init, getDB: () => DB };
+})();
+
+document.addEventListener('DOMContentLoaded', App.init);
+
+const CAMP = (function(){
+  // ─── GRADE → AGE RANGE (Annex A) ──────────────────────────
+  const GRADE_AGE = {
+    'DAY CARE':[3,4],'KINDER':[5,5],'GRADE 1':[5,6],'GRADE 2':[6,14],
+    'GRADE 3':[7,14],'GRADE 4':[8,18],'GRADE 5':[9,18],'GRADE 6':[10,18],
+    'ELEMENTARY ADM/ALS':[4,18],'SPED NON-GRADED':[4,18],
+    'GRADE 7':[11,18],'GRADE 8':[12,18],'GRADE 9':[13,18],
+    'JUNIOR HIGH SCHOOL(JHS) ADM/ALS':[11,18],'GRADE 10':[14,18],
+    'GRADE 11':[15,18],'GRADE 12':[16,18],
+    'SENIOR HIGH SCHOOL (SHS) ADM/ALS':[15,18]
+  };
+
+  // ─── COLUMN INDICES (shared schema, defined once in core.js) ──
+  const C = SDN_COLS;
+
+  // ─── STATE ─────────────────────────────────────────────────
+  let DB = null;
+
+  // ─── SHARED DB HOOK (called once by the shell loader) ──────
+  function setDB(data) {
+    DB = data;
+    if (!DB) { setStatus('err', 'Could not load roster — Admin can upload manually'); return; }
+    const hc = Object.keys(DB.households).length;
+    const mc = DB.meta.total_members || Object.values(DB.households).flat().length;
+    setStatus('ok', `Data loaded · ${mc.toLocaleString()} members · ${DB.meta.month || ''}`);
+  }
+
+  // ─── STATUS (CAMP's own inline status line, under the search box) ──
+  function setStatus(state, msg) {
+    const dot = document.getElementById('statusDot');
+    const txt = document.getElementById('statusText');
+    if (dot) dot.className = 'dot ' + state;
+    if (txt) txt.textContent = msg;
+  }
+
+  // ─── SEARCH ────────────────────────────────────────────────
+  function doSearch() {
+    const val = document.getElementById('searchInput').value.trim();
+    document.getElementById('results').style.display    = 'none';
+    document.getElementById('emptyState').style.display = 'none';
+    if (!val) return;
+    if (!DB) { showEmpty('Still Loading', 'The roster hasn\'t finished loading yet — please wait a moment and try again.'); return; }
+    const members = DB.households[val];
+    if (!members || !members.length) {
+      showEmpty('No Household Found', 'No records for ID: "' + val + '". Please check and try again.'); return;
+    }
+    renderHH(val, members);
+  }
+  function showEmpty(t, m) {
+    document.getElementById('emptyTitle').textContent = t;
+    document.getElementById('emptyMsg').textContent   = m;
+    document.getElementById('emptyState').style.display = 'block';
+  }
+
+  // ─── RENDER HOUSEHOLD ──────────────────────────────────────
+  function name(r) {
+    return [r[C.FN], r[C.MN], r[C.LN], r[C.EXT]].filter(Boolean).join(' ');
+  }
+  function renderHH(hhId, members) {
+    const gr = members.find(r => r[C.GRANTEE] === 'YES') || members[0];
+
+    // Header
+    document.getElementById('hhName').textContent = name(gr);
+    document.getElementById('hhId').textContent   = 'HH ID: ' + hhId;
+    const cs = gr[C.CS] || '';
+    const isA = cs.startsWith('1 -');
+    document.getElementById('hhBadge').innerHTML =
+      `<span class="sbadge ${isA?'sb-ok':'sb-no'}">${isA?'● ':''}${cs.replace(/^\d+ - /,'')}</span>`;
+
+    const addr = [gr[C.BRNGY], gr[C.MUNI], gr[C.PROV]].filter(Boolean).join(', ');
+    document.getElementById('hhInfo').innerHTML = `
+      <div class="ii"><label>Address</label><span>${addr||'—'}</span></div>
+      <div class="ii"><label>Set / Group</label><span>${gr[C.SET]||'—'}</span></div>
+      <div class="ii"><label>Province</label><span>${gr[C.PROV]||'—'}</span></div>
+      <div class="ii"><label>Municipality</label><span>${gr[C.MUNI]||'—'}</span></div>
+    `;
+    document.getElementById('memberCount').textContent =
+      members.length + ' member' + (members.length !== 1 ? 's' : '');
+
+    // Table rows + issue collection
+    const issues = [];
+    const tbody  = document.getElementById('tbody');
+    tbody.innerHTML = '';
+    const SCHOOL_GRADES = new Set([
+      'GRADE 1','GRADE 2','GRADE 3','GRADE 4','GRADE 5','GRADE 6',
+      'GRADE 7','GRADE 8','GRADE 9','GRADE 10','GRADE 11','GRADE 12',
+      'KINDER','DAY CARE'
+    ]);
+
+    members.forEach(r => {
+      const nm     = name(r);
+      const grade  = r[C.GRADE]  || '—';
+      const age    = parseInt(r[C.AGE]);
+      const attend = r[C.ATTEND] || '—';
+      const emon   = r[C.E_MON]  || '—';
+      const school = r[C.SCHOOL] || '';
+      const ms     = r[C.MS]     || '—';
+      const dis    = r[C.DIS]    || '';
+      const preg   = r[C.PREG]   || '';
+      const isG    = r[C.GRANTEE] === 'YES';
+      const gk     = grade.toUpperCase().trim();
+      const rowIss = [];
+
+      // Only flag inconsistencies for members aged 0–18
+      if (!isNaN(age) && age >= 0 && age <= 18) {
+        // Check 1: Age vs grade level
+        if (GRADE_AGE[gk]) {
+          const [mn, mx] = GRADE_AGE[gk];
+          if (age < mn || age > mx) {
+            const m = `Age ${age} is outside the required range (${mn}\u2013${mx}) for ${grade}.`;
+            rowIss.push({cell:'grade', m}); issues.push({nm, m});
+          }
+        }
+        // Check 2: Attending YES but no school name
+        if (attend === 'YES' && !school.trim()) {
+          const m = 'Attending school is YES but no school name is recorded.';
+          rowIss.push({cell:'attend', m}); issues.push({nm, m});
+        }
+        // Check 3: Active member with school grade but not monitored in education
+        if (SCHOOL_GRADES.has(gk) && emon === 'NO' && ms === '1 - Active') {
+          const m = `Active member in grade "${grade}" is not monitored in education.`;
+          rowIss.push({cell:'emon', m}); issues.push({nm, m});
+        }
+        // Check 4: Monitored YES but attending NO and no reason
+        if (emon === 'YES' && attend === 'NO' && !r[C.R_E]) {
+          const m = 'Monitored in education but not attending school \u2014 no reason recorded.';
+          rowIss.push({cell:'attend', m}); issues.push({nm, m});
+        }
+      }
+
+      function wrapWarn(text, cell) {
+        const w = rowIss.find(x => x.cell === cell);
+        if (!w) return text || '<span class="none-tx">—</span>';
+        return `<span class="wcell">${text}<span class="wico">!<span class="tip">${w.m}</span></span></span>`;
+      }
+
+      const msBadge = ms === '1 - Active'  ? '<span class="mb mb-a">Active</span>'
+                    : ms === '2 - Deceased'? '<span class="mb mb-d">Deceased</span>'
+                    : `<span class="mb mb-o">${ms.replace(/^\d+ - /,'')}</span>`;
+
+      const pwdCell  = dis && dis !== 'NO' && dis !== ''
+        ? `<span class="pwd-b">${dis}</span>` : '<span class="none-tx">—</span>';
+      const pregCell = preg && preg !== 'NOT PREGNANT' && preg !== 'N/A' && preg !== ''
+        ? `<span class="preg-b">${preg}</span>` : '<span class="none-tx">—</span>';
+
+      const sexCls = r[C.SEX]==='MALE' ? 'sm' : r[C.SEX]==='FEMALE' ? 'sf' : '';
+      const schoolDisp = school
+        ? `<span title="${school}" style="max-width:140px;display:inline-block;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom">${school}</span>`
+        : '<span class="none-tx">—</span>';
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="font-size:11px;color:var(--tx3);font-family:monospace">${r[C.ENTRY]||'—'}</td>
+        <td class="nm">${nm}${isG?'<span class="gmark">Grantee</span>':''}</td>
+        <td>${r[C.REL]||'—'}</td>
+        <td>${msBadge}</td>
+        <td class="${sexCls}">${r[C.SEX]||'—'}</td>
+        <td class="center">${isNaN(age)?'—':age}</td>
+        <td style="font-size:11px">${r[C.BDAY]||'—'}</td>
+        <td>${pwdCell}</td>
+        <td>${pregCell}</td>
+        <td class="center">${wrapWarn(emon,'emon')}</td>
+        <td class="center">${wrapWarn(attend,'attend')}</td>
+        <td>${wrapWarn(grade==='—'?'<span class="none-tx">—</span>':grade,'grade')}</td>
+        <td>${schoolDisp}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // Summary stats
+    const active = members.filter(r=>r[C.MS]==='1 - Active').length;
+    const inEduc = members.filter(r=>r[C.E_MON]==='YES').length;
+    const pwds   = members.filter(r=>r[C.DIS]&&r[C.DIS]!=='NO'&&r[C.DIS]!=='').length;
+    document.getElementById('stats').innerHTML = `
+      <div class="st"><div class="slbl">Members</div><div class="sval" style="color:var(--accent)">${members.length}</div></div>
+      <div class="st"><div class="slbl">Active</div><div class="sval" style="color:var(--ok)">${active}</div></div>
+      <div class="st"><div class="slbl">In Education</div><div class="sval" style="color:var(--blue)">${inEduc}</div></div>
+      <div class="st"><div class="slbl">PWD</div><div class="sval" style="color:var(--purple)">${pwds}</div></div>
+    `;
+
+    // Issues panel
+    document.getElementById('issueCount').textContent = issues.length + ' issue' + (issues.length!==1?'s':'');
+    const il = document.getElementById('issueList');
+    il.innerHTML = issues.length === 0
+      ? `<div class="no-issues">
+           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:block;margin:0 auto 6px">
+             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+           </svg>
+           No inconsistencies detected
+         </div>`
+      : issues.map(i=>`<div class="iitem"><b>⚠ ${i.nm}</b>${i.m}</div>`).join('');
+
+    document.getElementById('results').style.display = 'block';
+    // Smooth scroll to results
+    document.getElementById('results').scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  // Lets other tabs (e.g. HOPE) jump in and pre-fill a search
+  function searchFor(hhId) {
+    document.getElementById('searchInput').value = hhId;
+    doSearch();
+  }
+
+  // ─── TOOLTIP POSITIONING ─────────────────────────────────
+  function positionTip(e) {
+    const tips = document.querySelectorAll('.tip');
+    tips.forEach(t => {
+      if (t.style.display === 'block' || window.getComputedStyle(t).display !== 'none') {
+        let x = e.clientX + 12, y = e.clientY - 60;
+        if (x + 250 > window.innerWidth) x = e.clientX - 260;
+        if (y < 4) y = e.clientY + 16;
+        t.style.top  = y + 'px';
+        t.style.left = x + 'px';
+      }
+    });
+  }
+
+  function init() {
+    setStatus('loading', 'Loading roster data…');
+    document.getElementById('searchInput')
+      .addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+    document.addEventListener('mousemove', positionTip);
+  }
+
+  return { doSearch, setDB, init, searchFor, getDB: () => DB, columns: C };
+})();
+
+const AVRA = (function(){
+  const F={REGION:0,PROVINCE:1,MUNICIPALITY:2,BARANGAY:3,HH_ID:4,ENTRY_ID:5,FIRST_NAME:6,MIDDLE_NAME:7,LAST_NAME:8,EXT_NAME:9,BIRTHDAY:10,AGE:11,CLIENT_STATUS:14,MEMBER_STATUS:16,RELATION:17,GRANTEE:19,HH_SET:20};
+  let dbHouseholds={},currentPanel=0,memberCount=0,ariaOpen=false,ariaHistory=[];
+  
+  // Attachment storage: [{name, size, type, dataUrl}]
+  let attachments=[];
+  
+  /* ===== PANEL NAVIGATION ===== */
+  function showPanel(i){
+    const totalPanels=7;
+    document.querySelectorAll('.form-panel').forEach((p,j)=>p.classList.toggle('active',j===i));
+    document.querySelectorAll('.nav-step').forEach((n,j)=>n.classList.toggle('active',j===i));
+    currentPanel=i;
+    document.getElementById('prevBtn').style.display=i===0?'none':'inline-flex';
+    document.getElementById('nextBtn').style.display=i===(totalPanels-1)?'none':'inline-flex';
+  }
+  function nextPanel(){if(currentPanel<6)showPanel(currentPanel+1)}
+  function prevPanel(){if(currentPanel>0)showPanel(currentPanel-1)}
+  function v(id){return(document.getElementById(id)||{}).value||''}
+  function setVal(id,val){const el=document.getElementById(id);if(el&&val!=null)el.value=val;}
+  function setStatus(msg,cls){const el=document.getElementById('db-status');el.textContent=msg;el.className='db-status'+(cls?' '+cls:'');}
+  
+  function pv(id,val,ph){
+    const el=document.getElementById(id);if(!el)return;
+    el.innerHTML=val&&String(val).trim()?String(val):`<span class="ph">${ph||'—'}</span>`;
+  }
+  
+  /* ===== JSON AUTO-FETCH ===== */
+  
+  
+  function searchHH(){
+    const q=v('hhid-search').trim();
+    if(!q){setStatus('Please enter a Household ID.','');return}
+    if(!Object.keys(dbHouseholds).length){setStatus('No database loaded. Please import your JSON file first.','err');return}
+    let key=Object.keys(dbHouseholds).find(k=>k===q)||Object.keys(dbHouseholds).find(k=>k.includes(q)||q.includes(k));
+    if(!key){setStatus(`No record found for "${q}".`,'err');return}
+    const members=dbHouseholds[key];
+    if(!members||!members.length){setStatus('Record found but has no members.','err');return}
+    fillHouseholdProfile(key,members);
+    fillFamilyMembers(members);
+    updatePreview();
+    setStatus(`✓ Loaded: ${key} — ${members.length} member(s).`,'ok');
+    showPanel(0);
+  }
+  
+  function fillHouseholdProfile(hhid,members){
+    setVal('hhid',hhid);
+    const gr=members.find(m=>String(m[F.GRANTEE]).toUpperCase()==='YES')||members[0];
+    const fn=gr[F.FIRST_NAME]||'',mn=gr[F.MIDDLE_NAME]||'',ln=gr[F.LAST_NAME]||'',ext=gr[F.EXT_NAME]||'';
+    const nm=`${ln}, ${fn}${mn?' '+mn:''}${ext?' '+ext:''}`.toUpperCase().replace(/,\s*$/,'');
+    setVal('grantee',nm);
+    setVal('address',[gr[F.BARANGAY],gr[F.MUNICIPALITY],gr[F.PROVINCE]].filter(Boolean).join(', '));
+    setVal('clientstatus',gr[F.CLIENT_STATUS]||'');
+    setVal('hhset',gr[F.HH_SET]||'');
+    if(!v('contact'))setVal('contact','Not Shared');
+  }
+  
+  function fillFamilyMembers(members){
+    document.getElementById('members-container').innerHTML='';memberCount=0;
+    members.forEach(m=>{
+      memberCount++;const id='m'+memberCount;
+      const div=document.createElement('div');div.className='member-card';div.id='mc'+id;
+      const fn=m[F.FIRST_NAME]||'',mn=m[F.MIDDLE_NAME]||'',ln=m[F.LAST_NAME]||'',ext=m[F.EXT_NAME]||'';
+      const nm=`${ln}, ${fn}${mn?' '+mn:''}${ext?' '+ext:''}`.toUpperCase().replace(/,\s*$/,'');
+      div.innerHTML=`<div class="member-num">Member ${memberCount}</div>
+      <button class="remove-btn" onclick="AVRA.removeMember('${id}')" aria-label="Remove">×</button>
+      <div class="field-row">
+        <div class="field"><label>Entry ID</label><input type="text" id="eid${id}" value="${m[F.ENTRY_ID]||''}" oninput="AVRA.updatePreview()"></div>
+        <div class="field"><label>Relationship</label><input type="text" id="rel${id}" value="${m[F.RELATION]||''}" oninput="AVRA.updatePreview()"></div>
+      </div>
+      <div class="field"><label>Name</label><input type="text" id="nm${id}" value="${nm}" oninput="AVRA.updatePreview()"></div>
+      <div class="field-row">
+        <div class="field"><label>Birthdate</label><input type="text" id="bd${id}" value="${m[F.BIRTHDAY]||''}" oninput="AVRA.updatePreview()"></div>
+        <div class="field"><label>Age</label><input type="text" id="ag${id}" value="${m[F.AGE]||''}" oninput="AVRA.updatePreview()"></div>
+      </div>
+      <div class="field"><label>Member Status</label><input type="text" id="st${id}" value="${m[F.MEMBER_STATUS]||''}" oninput="AVRA.updatePreview()"></div>`;
+      document.getElementById('members-container').appendChild(div);
+    });
+  }
+  
+  function addMember(){
+    memberCount++;const id='m'+memberCount;
+    const div=document.createElement('div');div.className='member-card';div.id='mc'+id;
+    div.innerHTML=`<div class="member-num">Member ${memberCount}</div>
+    <button class="remove-btn" onclick="AVRA.removeMember('${id}')" aria-label="Remove">×</button>
+    <div class="field-row">
+      <div class="field"><label>Entry ID</label><input type="text" id="eid${id}" placeholder="Entry ID" oninput="AVRA.updatePreview()"></div>
+      <div class="field"><label>Relationship</label><select id="rel${id}" onchange="AVRA.updatePreview()">
+        <option value="">Select</option><option>Head</option><option>Wife / Spouse</option>
+        <option>Son / Daughter</option><option>Parent</option><option>Sibling</option>
+        <option>Grandson / Granddaughter</option><option>Son-in-law / Daughter-in-law</option><option>Other Relatives</option>
+      </select></div>
+    </div>
+    <div class="field"><label>Name</label><input type="text" id="nm${id}" placeholder="LAST, FIRST MIDDLE" oninput="AVRA.updatePreview()"></div>
+    <div class="field-row">
+      <div class="field"><label>Birthdate</label><input type="date" id="bd${id}" oninput="AVRA.updateBD('${id}')"></div>
+      <div class="field"><label>Age</label><input type="text" id="ag${id}" readonly style="background:#efefef"></div>
+    </div>
+    <div class="field"><label>Member Status</label><select id="st${id}" onchange="AVRA.updatePreview()">
+      <option value="">Select</option><option value="1 - Active">1 - Active</option>
+      <option value="2 - Deceased">2 - Deceased</option><option value="3 - Moved Out">3 - Moved Out</option>
+    </select></div>`;
+    document.getElementById('members-container').appendChild(div);
+  }
+  function updateBD(id){const bd=document.getElementById('bd'+id).value;if(bd)document.getElementById('ag'+id).value=Math.floor((new Date()-new Date(bd))/(365.25*24*60*60*1000));updatePreview();}
+  function removeMember(id){document.getElementById('mc'+id)?.remove();updatePreview();}
+  
+  /* ===== PREVIEW UPDATE ===== */
+  function updatePreview(){
+    pv('pv-hhid',v('hhid'));
+    const d=v('repdate');
+    pv('pv-date',d?new Date(d+'T00:00:00').toLocaleDateString('en-PH',{year:'numeric',month:'long',day:'numeric'}):'');
+    pv('pv-grantee',(v('grantee')||'').toUpperCase());
+    pv('pv-address',v('address'));
+    const cs=v('clientstatus'),hs=v('hhset');
+    pv('pv-status',cs||hs?`${cs||'—'} | ${hs||'—'}`:'');
+    pv('pv-contact',v('contact'));
+    const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    pv('pv-findings',v('findings')?esc(v('findings')):'','Findings will appear here...');
+    pv('pv-assessment',v('assessment')?esc(v('assessment')):'','Assessment will appear here...');
+    pv('pv-recommendation',v('recommendation')?esc(v('recommendation')):'','Recommendation will appear here...');
+    const pn=(v('prepname')||'').toUpperCase();
+    document.getElementById('pv-prepname').innerHTML=pn||'<span class="ph">Name of Preparer</span>';
+    document.getElementById('pv-preppos').innerHTML=v('preppos')||'<span class="ph">Position</span>';
+    const rn=(v('revname')||'').toUpperCase();
+    document.getElementById('pv-revname').innerHTML=rn||'<span class="ph">Reviewing Officer</span>';
+    document.getElementById('pv-revpos').innerHTML=v('revpos')||'<span class="ph">Position</span>';
+    updateMembersPreview();
+  }
+  
+  function updateMembersPreview(){
+    const tbody=document.getElementById('pv-members-body');
+    const cards=document.querySelectorAll('.member-card');
+    if(!cards.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#aaa;font-style:italic;padding:10px">No members loaded yet</td></tr>';return;}
+    tbody.innerHTML='';
+    cards.forEach(c=>{
+      const id=c.id.replace('mc','');
+      const st=(document.getElementById('st'+id)||{}).value||'—';
+      const sc=st.includes('Active')?'badge-active':st.includes('Moved')||st.includes('Deceased')?'badge-movout':'badge-inactive';
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${(document.getElementById('eid'+id)||{}).value||'—'}</td>
+      <td>${(document.getElementById('nm'+id)||{}).value||'—'}</td>
+      <td>${(document.getElementById('rel'+id)||{}).value||'—'}</td>
+      <td>${(document.getElementById('bd'+id)||{}).value||'—'}</td>
+      <td>${(document.getElementById('ag'+id)||{}).value||'—'}</td>
+      <td><span class="badge-status ${sc}">${st}</span></td>`;
+      tbody.appendChild(tr);
+    });
+  }
+  
+  /* ===== RESET ===== */
+  function resetForm(){
+    if(!confirm('Reset all fields? This cannot be undone.'))return;
+    ['hhid','repdate','grantee','address','clientstatus','hhset','contact','findings','assessment','recommendation','prepname','preppos','revname','revpos'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    document.getElementById('members-container').innerHTML='';memberCount=0;
+    attachments=[];renderAttachmentList();renderAttachmentPreviews();
+    updatePreview();showPanel(0);
+  }
+  
+  /* ===== ATTACHMENTS ===== */
+  function handleAttachments(input){
+    const files=Array.from(input.files);
+    if(!files.length)return;
+    let loaded=0;
+    files.forEach(file=>{
+      const reader=new FileReader();
+      reader.onload=e=>{
+        attachments.push({name:file.name,size:file.size,type:file.type,dataUrl:e.target.result});
+        loaded++;
+        if(loaded===files.length){renderAttachmentList();renderAttachmentPreviews();}
+      };
+      reader.readAsDataURL(file);
+    });
+    input.value='';// reset so same file can be re-added if needed
+  }
+  
+  function removeAttachment(idx){
+    attachments.splice(idx,1);
+    renderAttachmentList();
+    renderAttachmentPreviews();
+  }
+  
+  function fmtSize(bytes){
+    if(bytes<1024)return bytes+'B';
+    if(bytes<1048576)return (bytes/1024).toFixed(1)+'KB';
+    return (bytes/1048576).toFixed(1)+'MB';
+  }
+  
+  function renderAttachmentList(){
+    const list=document.getElementById('attach-list');
+    const msg=document.getElementById('attach-count-msg');
+    list.innerHTML='';
+    if(!attachments.length){msg.style.display='none';return;}
+    msg.style.display='block';
+    msg.textContent=`${attachments.length} attachment(s) will be appended after the Validation Report.`;
+    attachments.forEach((a,i)=>{
+      const item=document.createElement('div');
+      item.className='attach-item';
+      const icon=a.type==='application/pdf'?'📄':a.type.startsWith('image/')? '🖼️':'📎';
+      item.innerHTML=`<span style="font-size:15px">${icon}</span>
+        <span class="attach-item-name" title="${a.name}">${a.name}</span>
+        <span class="attach-item-size">${fmtSize(a.size)}</span>
+        <button class="attach-remove" onclick="AVRA.removeAttachment(${i})" title="Remove">×</button>`;
+      list.appendChild(item);
+    });
+  }
+  
+  function renderAttachmentPreviews(){
+    const wrap=document.getElementById('attach-previews-wrap');
+    wrap.innerHTML='';
+    if(!attachments.length)return;
+    attachments.forEach((a,i)=>{
+      // Separator label
+      const sep=document.createElement('div');
+      sep.className='attach-page-separator';
+      sep.innerHTML=`<span style="color:var(--navy);font-weight:700">📎 Attachment ${i+1}:</span> <span>${a.name}</span>`;
+      wrap.appendChild(sep);
+      // Attachment page
+      const page=document.createElement('div');
+      page.className='attach-page';
+      page.innerHTML=`<div class="attach-page-header">ATTACHMENT ${i+1} — ${a.name.toUpperCase()}</div>`;
+      if(a.type.startsWith('image/')){
+        const img=document.createElement('img');
+        img.src=a.dataUrl;img.alt=a.name;
+        page.appendChild(img);
+      } else if(a.type==='application/pdf'){
+        // Show embedded PDF viewer
+        const iframeWrap=document.createElement('div');
+        iframeWrap.className='attach-page-iframe-wrap';
+        const iframe=document.createElement('iframe');
+        iframe.src=a.dataUrl;
+        iframe.title=a.name;
+        iframeWrap.appendChild(iframe);
+        page.appendChild(iframeWrap);
+      } else {
+        page.innerHTML+=`<div class="attach-page-unsupported">Preview not available for this file type.</div>`;
+      }
+      wrap.appendChild(page);
+    });
+  }
+  
+  /* ===== PDF GENERATION ===== */
+  async function downloadPDF(){
+    const filename=`ValidationReport_${v('hhid')||'draft'}.pdf`;
+  
+    // Show progress overlay
+    const overlay=document.createElement('div');
+    overlay.className='pdf-overlay';
+    overlay.innerHTML='<div class="pdf-spinner"></div><p>Generating PDF, please wait...</p>';
+    document.querySelector('.avra-scope').appendChild(overlay);
+  
+    try {
+      // --- Step 1: Generate the main report ---
+      const reportEl=document.getElementById('report-content');
+      const reportOpt={
+        margin:[12,12,12,12],
+        filename,
+        image:{type:'jpeg',quality:.98},
+        html2canvas:{scale:2,useCORS:true,letterRendering:true,scrollY:0,logging:false},
+        jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+        pagebreak:{mode:['css','legacy'],avoid:['.rpt-sig-row','.rpt-table thead']}
+      };
+  
+      const worker=html2pdf().set(reportOpt).from(reportEl);
+      let pdf=await worker.toPdf().get('pdf');
+  
+      // --- Step 2: Append each attachment ---
+      if(attachments.length>0){
+        const {jsPDF}=window.jspdf||{};
+        // html2pdf bundles jsPDF; access it via the pdf object
+        for(let i=0;i<attachments.length;i++){
+          const a=attachments[i];
+          pdf.addPage('a4','portrait');
+  
+          // Draw a header bar for the attachment
+          pdf.setFillColor(26,45,79); // navy
+          pdf.rect(0,0,210,14,'F');
+          pdf.setTextColor(255,255,255);
+          pdf.setFont('helvetica','bold');
+          pdf.setFontSize(9);
+          pdf.text(`ATTACHMENT ${i+1} — ${a.name}`,10,9);
+          pdf.setTextColor(0,0,0);
+  
+          if(a.type.startsWith('image/')){
+            // Draw image on page
+            const imgProps=await getImageDimensions(a.dataUrl);
+            const pageW=210-24; // margins
+            const pageH=297-24-14;
+            let imgW=pageW,imgH=(imgProps.h/imgProps.w)*imgW;
+            if(imgH>pageH){imgH=pageH;imgW=(imgProps.w/imgProps.h)*imgH;}
+            const imgX=12+(pageW-imgW)/2;
+            pdf.addImage(a.dataUrl,a.type.includes('png')?'PNG':'JPEG',imgX,18,imgW,imgH);
+          } else if(a.type==='application/pdf'){
+            // Render PDF pages using an offscreen canvas approach
+            overlay.querySelector('p').textContent=`Processing attachment ${i+1} of ${attachments.length}...`;
+            await appendPdfPages(pdf,a.dataUrl);
+          }
+        }
+      }
+  
+      // --- Step 3: Save ---
+      pdf.save(filename);
+    } catch(err){
+      console.error('PDF error:',err);
+      alert('PDF generation failed. Please try again.\n\n'+err.message);
+    } finally {
+      overlay.remove();
+    }
+  }
+  
+  function getImageDimensions(dataUrl){
+    return new Promise(resolve=>{
+      const img=new Image();
+      img.onload=()=>resolve({w:img.naturalWidth,h:img.naturalHeight});
+      img.src=dataUrl;
+    });
+  }
+  
+  // Render PDF pages into the jsPDF object using pdf.js (bundled in most browsers or via CDN)
+  async function appendPdfPages(pdf,pdfDataUrl){
+    // Dynamically load pdf.js if not already available
+    if(!window.pdfjsLib){
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  
+    const pdfDoc=await window.pdfjsLib.getDocument(pdfDataUrl).promise;
+    const numPages=pdfDoc.numPages;
+  
+    for(let pageNum=1;pageNum<=numPages;pageNum++){
+      if(pageNum>1) pdf.addPage('a4','portrait');
+      // Draw attachment header only on first page (already added)
+      if(pageNum>1){
+        pdf.setFillColor(26,45,79);
+        pdf.rect(0,0,210,14,'F');
+        pdf.setTextColor(255,255,255);
+        pdf.setFont('helvetica','bold');
+        pdf.setFontSize(9);
+        pdf.text(`(continued — page ${pageNum})`,10,9);
+        pdf.setTextColor(0,0,0);
+      }
+  
+      const page=await pdfDoc.getPage(pageNum);
+      const viewport=page.getViewport({scale:2.0});
+      const canvas=document.createElement('canvas');
+      canvas.width=viewport.width;
+      canvas.height=viewport.height;
+      const ctx=canvas.getContext('2d');
+      await page.render({canvasContext:ctx,viewport}).promise;
+  
+      const imgData=canvas.toDataURL('image/jpeg',0.95);
+      const pageW=210-24;
+      const pageH=297-14-14;
+      const scaleW=pageW;
+      const scaleH=(canvas.height/canvas.width)*scaleW;
+      const finalH=Math.min(scaleH,pageH);
+      const finalW=(finalH/scaleH)*scaleW;
+      const xOff=12+(pageW-finalW)/2;
+      pdf.addImage(imgData,'JPEG',xOff,16,finalW,finalH);
+    }
+  }
+  
+  function loadScript(src){
+    return new Promise((resolve,reject)=>{
+      if(document.querySelector(`script[src="${src}"]`)){resolve();return;}
+      const s=document.createElement('script');
+      s.src=src;s.onload=resolve;s.onerror=reject;
+      document.head.appendChild(s);
+    });
+  }
+  
+  /* ===== ARIA ===== */
+  function toggleARIA(){
+    ariaOpen=!ariaOpen;
+    const p=document.getElementById('aria-panel');
+    p.classList.toggle('aria-expanded',ariaOpen);
+    p.classList.toggle('aria-collapsed',!ariaOpen);
+    document.getElementById('aria-toggle').textContent=ariaOpen?'▼':'▲';
+    if(ariaOpen)setTimeout(()=>document.getElementById('aria-input').focus(),280);
+  }
+  function openARIA(msg){if(!ariaOpen)toggleARIA();setTimeout(()=>{document.getElementById('aria-input').value=msg;sendARIA();},420);}
+  function sendQuick(msg){if(!ariaOpen)toggleARIA();setTimeout(()=>{document.getElementById('aria-input').value=msg;sendARIA();},120);}
+  function appendMsg(text,role){
+    const div=document.createElement('div');div.className='aria-msg '+role;div.innerHTML=text;
+    const msgs=document.getElementById('aria-messages');msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
+    return div;
+  }
+  const ARIA_PROXY='https://sparkling-sound-5536.resmairish.workers.dev';
+  const GROQ_MODEL='llama-3.3-70b-versatile';
+  
+  async function sendARIA(){
+    const input=document.getElementById('aria-input');
+    const msg=input.value.trim();if(!msg)return;
+    input.value='';appendMsg(msg,'user');
+    const typing=appendMsg('<em>ARIA is writing...</em>','bot typing');
+    const ctx=[];
+    if(v('hhid'))ctx.push('Household ID: '+v('hhid'));
+    if(v('grantee'))ctx.push('Grantee: '+v('grantee'));
+    if(v('clientstatus'))ctx.push('Client Status: '+v('clientstatus'));
+    if(v('address'))ctx.push('Address: '+v('address'));
+    if(v('findings'))ctx.push('Current Findings draft: '+v('findings'));
+    if(v('assessment'))ctx.push('Current Assessment draft: '+v('assessment'));
+    if(v('recommendation'))ctx.push('Current Recommendation draft: '+v('recommendation'));
+    const systemPrompt='You are ARIA, an expert AI writing assistant embedded in AVRA (Automated Validation Report Assistant), used by Philippine DSWD (Department of Social Welfare and Development) field officers and social workers.\n\nYour PRIMARY role is to help staff IMPROVE and POLISH their existing drafts — not just write from scratch. When a user shares a draft, always work WITH it: preserve their observations and intent while improving grammar, clarity, structure, and professionalism.\n\nCapabilities:\n1. POLISH/IMPROVE DRAFT — When given a draft, rewrite it with better grammar, flow, and formal tone. Show the improved version in a clearly labeled block.\n2. WRITE FROM SCRATCH — When given key points or bullet notes, turn them into a full professional paragraph.\n3. EXPLAIN CHANGES — Briefly note what you improved and why, so the user learns.\n4. SUGGEST CONTENT — When asked, suggest what to include in a section based on context.\n\nWriting style:\n- Formal, third-person, objective Philippine government report style\n- Concise but complete — typically 3–6 sentences per section\n- Use proper DSWD and 4Ps terminology: grantee, beneficiary household, compliance, grant status, CS1-Active, CS19-Temporarily On Hold, 4Ps Program, Pantawid Pamilyang Pilipino Program, household validation\n- Always present the final polished text in a clearly labeled block so the user can copy-paste directly into the form\n- Never refuse to help with a draft — always attempt to improve whatever is given\n- Avoid filler phrases; every sentence must add meaning'+(ctx.length?'\n\nCurrent form context:\n'+ctx.join('\n'):'');
+    ariaHistory.push({role:'user',content:msg});
+    try{
+      const res=await fetch(ARIA_PROXY,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          model:GROQ_MODEL,
+          max_tokens:1000,
+          messages:[{role:'system',content:systemPrompt},...ariaHistory.slice(-14)]
+        })
+      });
+      if(!res.ok){const err=await res.json().catch(()=>({}));typing.remove();appendMsg(`Connection error (${res.status}): ${err.error?.message||'Please try again.'}`,'bot');ariaHistory.pop();return;}
+      const data=await res.json();
+      const reply=(data.choices?.[0]?.message?.content||'').trim();
+      typing.remove();
+      if(reply){ariaHistory.push({role:'assistant',content:reply});appendMsg(reply.replace(/\n/g,'<br>'),'bot');}
+      else{appendMsg('ARIA received an empty response. Please try again.','bot');ariaHistory.pop();}
+    }catch(e){
+      typing.remove();
+      appendMsg('Unable to connect. Please check your internet connection and try again.','bot');
+      ariaHistory.pop();console.error('ARIA error:',e);
+    }
+  }
+  
+  /* ===== INIT ===== */
+  function init(){
+    updatePreview();
+    document.getElementById('repdate').value=new Date().toISOString().split('T')[0];
+    updatePreview();
+    setStatus('Waiting for roster data…','');
+  }
+  
+  /* ===== SHARED DB HOOK ===== */
+  function setDB(data){
+    dbHouseholds = (data && data.households) || {};
+    const cnt = Object.keys(dbHouseholds).length;
+    if (cnt){
+      document.getElementById('db-loaded-info').textContent = '✓ Roster loaded — ' + cnt.toLocaleString() + ' households ready';
+      document.getElementById('db-loaded-info').style.display = 'block';
+      setStatus('✓ Database ready. Search by Household ID above.', 'ok');
+    } else {
+      setStatus('⚠ No roster data available.', 'err');
+    }
+  }
+
+  return {
+    showPanel,
+    nextPanel,
+    prevPanel,
+    addMember,
+    removeMember,
+    updateBD,
+    updatePreview,
+    resetForm,
+    handleAttachments,
+    removeAttachment,
+    downloadPDF,
+    toggleARIA,
+    openARIA,
+    sendQuick,
+    sendARIA,
+    searchHH,
+    setDB,
+    init
+  };
+})();
+const HOPE = (function(){
+  const C = SDN_COLS;
+  const PAGE_SIZE = 25;
+
+  let DB = null;
+  let allEligible = [];     // every computed candidate (active + inactive)
+  let geoIndex = {};         // { municipality: Set(barangay) } built from the WHOLE roster
+  let totalActiveHH = 0;
+  let computed = false;
+
+  let filtered = [];
+  let page = 1;
+  let filters = { muni: 'ALL', brgy: 'ALL', activeOnly: true };
+
+  function fullName(r){
+    const last = r[C.LN] || '', first = r[C.FN] || '', mid = r[C.MN] || '', ext = r[C.EXT] || '';
+    return `${last}, ${first}${mid?' '+mid:''}${ext?' '+ext:''}`.replace(/^,\s*/, '').trim();
+  }
+
+  // ─── ELIGIBILITY RULE ───────────────────────────────────────
+  // A household is a Natural-Attrition candidate when, among the
+  // members it currently has flagged EDUC_MONITORED = YES:
+  //   (a) none of them are aged 0–18 anymore, OR
+  //   (b) every single one of them is already a HIGH SCHOOL GRADUATE
+  function classify(hhId, members){
+    const monitored = members.filter(m => (m[C.E_MON] || '').trim().toUpperCase() === 'YES');
+    const monitoredKids = monitored.filter(m => {
+      const age = parseInt(m[C.AGE]);
+      return !isNaN(age) && age >= 0 && age <= 18;
+    });
+    const condA = monitoredKids.length === 0;
+    const condB = monitored.length > 0 && monitored.every(m => (m[C.GRADE] || '').trim().toUpperCase() === 'HIGH SCHOOL GRADUATE');
+    if (!condA && !condB) return null;
+
+    let reason;
+    if (condB) reason = 'All monitored children are High School graduates';
+    else if (monitored.length === 0) reason = 'No children currently monitored in education';
+    else reason = 'Monitored children have all aged past 18';
+
+    const gr = members.find(m => (m[C.GRANTEE] || '').toUpperCase() === 'YES') || members[0];
+    const cs = gr[C.CS] || '';
+    return {
+      hhId,
+      name: fullName(gr),
+      muni: gr[C.MUNI] || '—',
+      brgy: gr[C.BRNGY] || '—',
+      prov: gr[C.PROV] || '—',
+      members: members.length,
+      monitored: monitored.length,
+      cs,
+      active: cs.trim().startsWith('1 -'),
+      reason
+    };
+  }
+
+  // ─── COMPUTE (run once per loaded DB, off the main thread is
+  // overkill for ~55k rows — a single synchronous pass is fast) ──
+  function compute(){
+    allEligible = [];
+    geoIndex = {};
+    totalActiveHH = 0;
+    const households = DB.households;
+    for (const hhId in households){
+      const members = households[hhId];
+      if (!members || !members.length) continue;
+      const gr = members.find(m => (m[C.GRANTEE] || '').toUpperCase() === 'YES') || members[0];
+      const muni = gr[C.MUNI] || '—', brgy = gr[C.BRNGY] || '—';
+      if (!geoIndex[muni]) geoIndex[muni] = new Set();
+      geoIndex[muni].add(brgy);
+      if ((gr[C.CS] || '').trim().startsWith('1 -')) totalActiveHH++;
+
+      const result = classify(hhId, members);
+      if (result) allEligible.push(result);
+    }
+    computed = true;
+  }
+
+  // ─── FILTERING / PAGINATION ─────────────────────────────────
+  function applyFilters(){
+    filtered = allEligible.filter(h =>
+      (!filters.activeOnly || h.active) &&
+      (filters.muni === 'ALL' || h.muni === filters.muni) &&
+      (filters.brgy === 'ALL' || h.brgy === filters.brgy)
+    );
+    page = 1;
+    renderSummary();
+    renderTable();
+  }
+
+  function populateMuniSelect(){
+    const sel = document.getElementById('hopeMuni');
+    const munis = Object.keys(geoIndex).sort();
+    sel.innerHTML = '<option value="ALL">All Municipalities</option>' +
+      munis.map(m => `<option value="${m}">${m}</option>`).join('');
+  }
+  function populateBrgySelect(){
+    const sel = document.getElementById('hopeBrgy');
+    if (filters.muni === 'ALL'){
+      const all = new Set();
+      Object.values(geoIndex).forEach(set => set.forEach(b => all.add(b)));
+      sel.innerHTML = '<option value="ALL">All Barangays</option>' +
+        [...all].sort().map(b => `<option value="${b}">${b}</option>`).join('');
+    } else {
+      const set = geoIndex[filters.muni] || new Set();
+      sel.innerHTML = '<option value="ALL">All Barangays</option>' +
+        [...set].sort().map(b => `<option value="${b}">${b}</option>`).join('');
+    }
+  }
+
+  function onMuniChange(){
+    filters.muni = document.getElementById('hopeMuni').value;
+    filters.brgy = 'ALL';
+    populateBrgySelect();
+    applyFilters();
+  }
+  function onBrgyChange(){
+    filters.brgy = document.getElementById('hopeBrgy').value;
+    applyFilters();
+  }
+  function onActiveToggle(){
+    filters.activeOnly = document.getElementById('hopeActiveOnly').checked;
+    applyFilters();
+  }
+
+  // ─── RENDER ────────────────────────────────────────────────
+  function renderSummary(){
+    const wrap = document.getElementById('hopeSummary');
+    const totalMembers = filtered.reduce((s,h) => s + h.members, 0);
+    const muniCount = new Set(filtered.map(h => h.muni)).size;
+    const pct = totalActiveHH ? (filtered.filter(h=>h.active).length / totalActiveHH * 100) : 0;
+    wrap.innerHTML = `
+      <div class="st"><div class="slbl">Exit Candidates</div><div class="sval" style="color:var(--accent)">${filtered.length.toLocaleString()}</div></div>
+      <div class="st"><div class="slbl">Total Members</div><div class="sval" style="color:var(--blue)">${totalMembers.toLocaleString()}</div></div>
+      <div class="st"><div class="slbl">Municipalities</div><div class="sval" style="color:var(--purple)">${muniCount}</div></div>
+      <div class="st"><div class="slbl">% of Active Caseload</div><div class="sval" style="color:var(--ok)">${pct.toFixed(1)}%</div></div>
+    `;
+  }
+
+  function renderTable(){
+    const tbody = document.getElementById('hopeTbody');
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    if (page > totalPages) page = totalPages;
+    const start = (page - 1) * PAGE_SIZE;
+    const rows = filtered.slice(start, start + PAGE_SIZE);
+
+    if (!rows.length){
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--tx3)">No households match these filters.</td></tr>`;
+    } else {
+      tbody.innerHTML = rows.map(h => `
+        <tr>
+          <td style="font-family:monospace;font-size:11px">${h.hhId}</td>
+          <td class="nm">${h.name || '—'}</td>
+          <td>${h.muni}</td>
+          <td>${h.brgy}</td>
+          <td class="center">${h.members}</td>
+          <td><span class="sbadge ${h.active?'sb-ok':'sb-no'}">${h.active?'● ':''}${h.cs.replace(/^\d+ - /,'')||'—'}</span></td>
+          <td style="font-size:11px;color:var(--tx2)">${h.reason}</td>
+          <td><button class="btn-sec" style="padding:5px 10px;font-size:11px" onclick="HOPE.viewInCamp('${h.hhId}')">View in CAMP →</button></td>
+        </tr>
+      `).join('');
+    }
+
+    document.getElementById('hopePageInfo').textContent =
+      filtered.length ? `Page ${page} of ${totalPages} · ${filtered.length.toLocaleString()} households` : 'No results';
+    document.getElementById('hopePrev').disabled = page <= 1;
+    document.getElementById('hopeNext').disabled = page >= totalPages;
+  }
+
+  function prevPage(){ if (page > 1){ page--; renderTable(); } }
+  function nextPage(){ const tp = Math.ceil(filtered.length / PAGE_SIZE); if (page < tp){ page++; renderTable(); } }
+
+  function viewInCamp(hhId){
+    App.switchTab('camp');
+    setTimeout(() => CAMP.searchFor(hhId), 60);
+  }
+
+  function exportCSV(){
+    if (!filtered.length){ alert('Nothing to export for the current filters.'); return; }
+    const head = ['Household ID','Grantee Name','Municipality','Barangay','Members','Client Status','Reason'];
+    const lines = [head.join(',')];
+    filtered.forEach(h => {
+      const row = [h.hhId, h.name, h.muni, h.brgy, h.members, h.cs, h.reason]
+        .map(v => `"${String(v).replace(/"/g,'""')}"`);
+      lines.push(row.join(','));
+    });
+    const blob = new Blob([lines.join('\n')], {type: 'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'HOPE_exit_candidates_' + (DB.meta.month || 'export').replace(/\s+/g,'_') + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  // ─── ENTRY POINTS ──────────────────────────────────────────
+  function setDB(data){
+    DB = data;
+    computed = false;
+    if (document.getElementById('tab-hope').classList.contains('tab-active')) onShow();
+    else renderWaiting();
+  }
+
+  function renderWaiting(){
+    document.getElementById('hopeStatus').textContent = DB ? 'Tap the HOPE tab to compute exit candidates…' : 'Waiting for roster data…';
+  }
+
+  function onShow(){
+    if (!DB){
+      document.getElementById('hopeStatus').textContent = 'Waiting for roster data…';
+      return;
+    }
+    if (!computed){
+      document.getElementById('hopeStatus').textContent = 'Scanning households…';
+      // Yield to the browser so the "scanning" message can paint first
+      setTimeout(() => {
+        compute();
+        populateMuniSelect();
+        populateBrgySelect();
+        document.getElementById('hopeStatus').textContent = '';
+        applyFilters();
+      }, 10);
+    }
+  }
+
+  function init(){
+    document.getElementById('hopeMuni').addEventListener('change', onMuniChange);
+    document.getElementById('hopeBrgy').addEventListener('change', onBrgyChange);
+    document.getElementById('hopeActiveOnly').addEventListener('change', onActiveToggle);
+    document.getElementById('hopePrev').addEventListener('click', prevPage);
+    document.getElementById('hopeNext').addEventListener('click', nextPage);
+    document.getElementById('hopeExport').addEventListener('click', exportCSV);
+    renderWaiting();
+  }
+
+  return { setDB, init, onShow, viewInCamp, exportCSV };
+})();
+
+</script>
+</body>
+</html>
